@@ -1,7 +1,7 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Container } from "@/components/ui/Container";
-import { ProductGrid, ProductGridEmpty } from "@/components/storefront/ProductGrid";
+import { ProductGrid, ProductGridEmpty, ProductGridSkeleton } from "@/components/storefront/ProductGrid";
 import { Hero } from "@/components/sections/Hero";
 import { LogoStrip } from "@/components/sections/LogoStrip";
 import { CTABanner } from "@/components/sections/CTABanner";
@@ -13,15 +13,6 @@ import type { PaginatedResult, ProductSummary } from "@/types/product";
 const TRUSTED_BRANDS = ["Samsung", "Apple", "Sony", "LG", "HP", "Dell", "Xiaomi", "JBL"];
 const FEATURED_IN = ["TechCrunch", "The Verge", "Best E-commerce App 2024", "Forbes Africa"];
 
-// Forces a fresh server render on every request instead of Next's default
-// static-generation-with-ISR. Netlify's Next.js Runtime doesn't reliably
-// re-generate this page on its 60s revalidate schedule (confirmed: the
-// homepage kept serving an empty "Catalog coming soon" snapshot from the
-// build-time render long after real products existed and the API itself
-// was responding correctly and fast) — same category of runtime gap as the
-// earlier Suspense-streaming and external-rewrites issues on this host.
-export const revalidate = 0;
-
 const FEATURED_CATEGORIES = [
   { name: "Smartphones", slug: "smartphones" },
   { name: "Laptops", slug: "laptops" },
@@ -31,7 +22,21 @@ const FEATURED_CATEGORIES = [
   { name: "Home Electronics", slug: "home-electronics" },
 ];
 
-async function ProductSection({
+async function ProductSectionBody({ query }: { query: string }) {
+  const result = await serverApiRequest<PaginatedResult<ProductSummary>>(
+    `/products${query}`,
+    { tags: ["products"] },
+  );
+  const products = result?.items ?? [];
+
+  return products.length > 0 ? (
+    <ProductGrid products={products} />
+  ) : (
+    <ProductGridEmpty message="Catalog coming soon — check back shortly." />
+  );
+}
+
+function ProductSection({
   title,
   href,
   query,
@@ -42,18 +47,6 @@ async function ProductSection({
   query: string;
   accessory?: ReactNode;
 }) {
-  // Deliberately not wrapped in <Suspense> — on Netlify's Next.js Runtime,
-  // Suspense boundaries around async Server Components get stuck in their
-  // fallback state forever (confirmed via the "<template>" streaming marker
-  // never resolving in the shipped HTML, even after a fresh reload). A plain
-  // top-level await renders reliably instead, at the cost of the per-section
-  // skeleton streaming effect.
-  const result = await serverApiRequest<PaginatedResult<ProductSummary>>(
-    `/products${query}`,
-    { tags: ["products"] },
-  );
-  const products = result?.items ?? [];
-
   return (
     <section className="border-t border-neutral-200 py-8 dark:border-surface-800">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -65,11 +58,9 @@ async function ProductSection({
           See all &rsaquo;
         </Link>
       </div>
-      {products.length > 0 ? (
-        <ProductGrid products={products} />
-      ) : (
-        <ProductGridEmpty message="Catalog coming soon — check back shortly." />
-      )}
+      <Suspense fallback={<ProductGridSkeleton />}>
+        <ProductSectionBody query={query} />
+      </Suspense>
     </section>
   );
 }

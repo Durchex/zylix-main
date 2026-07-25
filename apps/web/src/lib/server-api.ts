@@ -24,9 +24,6 @@ export async function serverApiRequest<T>(
     });
 
     if (!res.ok) {
-      // Temporary diagnostic logging — this path silently returned null with
-      // zero visibility into why on Netlify. Remove once the root cause of
-      // products not showing on the homepage is confirmed and fixed.
       console.error("[serverApiRequest] non-ok response", { url, status: res.status, statusText: res.statusText });
       return null;
     }

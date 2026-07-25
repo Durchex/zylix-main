@@ -5,7 +5,7 @@ import type { AuthUser } from "@/types/user";
 // so proxy.ts (edge middleware, runs on this domain) can read it. The real
 // refresh token lives in an httpOnly cookie scoped to the API's domain,
 // which is invisible to this domain's server-side code when the frontend
-// and API are deployed separately (e.g. Netlify + Render) — cookies don't
+// and API are deployed separately (e.g. Vercel + Render) — cookies don't
 // cross domains regardless of sameSite/secure settings.
 const SESSION_MARKER_COOKIE = "zylix_session";
 const SESSION_MARKER_MAX_AGE_S = 30 * 24 * 60 * 60; // matches the refresh token's lifetime

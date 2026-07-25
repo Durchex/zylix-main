@@ -1,9 +1,9 @@
 import { useAuthStore } from "@/store/auth.store";
 
 // Prefer calling the API directly (CORS) over the Next.js rewrite proxy when
-// NEXT_PUBLIC_API_URL is set — some hosts (e.g. Netlify's Next.js Runtime)
-// don't reliably proxy rewrites() to an external origin. Falls back to the
-// relative path (via rewrites) for local dev / hosts where that works fine.
+// NEXT_PUBLIC_API_URL is set — some hosts don't reliably proxy rewrites() to
+// an external origin. Falls back to the relative path (via rewrites) for
+// local dev / hosts where that works fine (Vercel's rewrites() proxy included).
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
   ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1`
   : "/api/v1";

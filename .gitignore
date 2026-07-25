@@ -39,9 +39,6 @@ Thumbs.db
 # vercel
 .vercel
 
-# netlify
-.netlify
-
 # docker
 *.pid
 
