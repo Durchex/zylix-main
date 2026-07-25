@@ -1,0 +1,80 @@
+# Render Blueprint — see docs/DEPLOYMENT.md for the full runbook.
+#
+# Defines the Postgres database and the API web service. Render's managed
+# Redis/Key Value product isn't included here — its blueprint field name has
+# changed across Render's product history, so it's created manually in the
+# dashboard (New -> Key Value) per the guide, then wired to REDIS_URL below.
+#
+# Import: Render dashboard -> New -> Blueprint -> select this repo.
+
+databases:
+  - name: zylix-postgres
+    databaseName: zylix
+    user: zylix
+    plan: starter
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: zylix-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      # Set once the Netlify site is live (see docs/DEPLOYMENT.md).
+      - key: APP_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zylix-postgres
+          property: connectionString
+      # Paste the connection string from the manually-created Key Value
+      # instance here (Render dashboard -> your Key Value instance -> Connect).
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: TWO_FACTOR_ISSUER
+        value: Zylix
+      - key: DEFAULT_CURRENCY
+        value: NGN
+      - key: DEFAULT_LOCALE
+        value: en
+      # Everything below is optional at launch — leave unset until you have
+      # real credentials for that provider (see docs/PAYMENTS.md).
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FLUTTERWAVE_PUBLIC_KEY
+        sync: false
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      - key: FLUTTERWAVE_ENCRYPTION_KEY
+        sync: false
+      - key: FLUTTERWAVE_WEBHOOK_SECRET_HASH
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLIC_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false

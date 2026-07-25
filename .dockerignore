@@ -1,0 +1,25 @@
+# Root .dockerignore — applies to both apps/api/Dockerfile and
+# apps/web/Dockerfile, which are both built with the repo root as context
+# (required for npm workspaces to resolve the shared lockfile).
+
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+
+.git
+.github
+.claude
+docs
+
+.env
+.env.local
+.env.*.local
+
+*.log
+npm-debug.log*
+
+.vscode
+.DS_Store
+Thumbs.db

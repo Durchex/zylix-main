@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply bg-white text-neutral-900 transition-colors duration-300 dark:bg-surface-950 dark:text-neutral-50;
+  }
+
+  * {
+    @apply border-neutral-200 dark:border-surface-800;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-surface-950;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply border border-white/20 bg-white/60 backdrop-blur-xl dark:border-white/10 dark:bg-surface-900/60;
+  }
+
+  .glass-dark {
+    @apply border border-white/10 bg-surface-900/40 backdrop-blur-xl;
+  }
+}

@@ -1,0 +1,25 @@
+# Netlify config for apps/web — see docs/DEPLOYMENT.md for the full runbook.
+#
+# base = "apps/web" so the Next.js Runtime plugin finds apps/web/.next as the
+# build output. The install/build command still cd's to the monorepo root
+# first, because npm workspaces need the root package.json + lockfile to
+# resolve apps/web's hoisted dependencies (same reasoning as apps/web/vercel.json).
+
+[build]
+  base = "apps/web"
+  command = "cd ../.. && npm ci && npm run build:web"
+  publish = ".next"
+
+[build.environment]
+  # Netlify sets NODE_ENV=production for builds, which makes npm skip
+  # devDependencies by default — but prisma (needed by the root postinstall
+  # hook's `prisma generate`) and typescript (needed by `next build`) are
+  # both devDependencies. Without this, install fails with "prisma: not found".
+  NPM_FLAGS = "--include=dev"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# API_URL is set as a Netlify environment variable in the dashboard (Site
+# configuration -> Environment variables), not here, since its value is the
+# Render API's URL and isn't known until that service is deployed.
