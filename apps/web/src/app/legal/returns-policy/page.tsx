@@ -41,7 +41,7 @@ export default function ReturnsPolicyPage() {
       <h2>Damaged or incorrect items</h2>
       <p>
         If you received a damaged, defective, or incorrect item, contact{" "}
-        <a href="/support/contact" className="text-brand-600 underline underline-offset-2">
+        <a href="/contact" className="text-brand-600 underline underline-offset-2">
           Support
         </a>{" "}
         within 48 hours of delivery with photos — we&rsquo;ll prioritize a replacement or refund.

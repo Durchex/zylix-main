@@ -8,7 +8,7 @@ const FOOTER_COLUMNS: Array<{ title: string; links: Array<{ label: string; href:
   {
     title: "Shop",
     links: [
-      { label: "All Products", href: "/shop" },
+      { label: "All Products", href: "/products" },
       { label: "New Arrivals", href: "/new-arrivals" },
       { label: "Deals", href: "/deals" },
       { label: "Brands", href: "/brands" },
@@ -21,7 +21,7 @@ const FOOTER_COLUMNS: Array<{ title: string; links: Array<{ label: string; href:
       { label: "FAQ", href: "/support/faq" },
       { label: "Track Order", href: "/support/order-tracking" },
       { label: "Returns & Refunds", href: "/support/returns" },
-      { label: "Contact Us", href: "/support/contact" },
+      { label: "Contact Us", href: "/contact" },
     ],
   },
   {

@@ -13,7 +13,7 @@ function EmptyWishlist() {
   return (
     <div className="mt-10 flex flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-300 py-16 text-center">
       <p className="text-neutral-500">Your wishlist is empty.</p>
-      <Link href="/shop" className="mt-4">
+      <Link href="/products" className="mt-4">
         <Button variant="outline">Browse products</Button>
       </Link>
     </div>

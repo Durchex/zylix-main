@@ -71,7 +71,7 @@ export default async function CheckoutConfirmationPage({ params }: ConfirmationP
         <Link href="/account/orders">
           <Button variant="outline">View order</Button>
         </Link>
-        <Link href="/shop">
+        <Link href="/products">
           <Button>Continue shopping</Button>
         </Link>
       </div>

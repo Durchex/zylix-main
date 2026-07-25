@@ -39,7 +39,7 @@ export default function ShippingPolicyPage() {
       <p>
         If a delivery is delayed beyond the estimated window, or an item arrives damaged, contact
         us via{" "}
-        <a href="/support/contact" className="text-brand-600 underline underline-offset-2">
+        <a href="/contact" className="text-brand-600 underline underline-offset-2">
           Support
         </a>{" "}
         with your order number.

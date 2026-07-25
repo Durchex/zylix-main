@@ -6,6 +6,7 @@ import { Rating } from "@/components/ui/Rating";
 import { serverApiRequest } from "@/lib/server-api";
 import { ImageGallery } from "@/app/products/[slug]/ImageGallery";
 import { AddToCartPanel } from "@/app/products/[slug]/AddToCartPanel";
+import { TrackRecentlyViewed } from "@/components/sections/RecentlyViewed";
 import type { ProductDetail } from "@/types/product";
 
 interface ProductPageProps {
@@ -76,8 +77,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      <TrackRecentlyViewed product={product} />
+
       <nav className="mb-6 text-sm text-neutral-500 dark:text-neutral-400">
-        <Link href="/shop" className="hover:text-ink-900 dark:hover:text-neutral-100">
+        <Link href="/products" className="hover:text-ink-900 dark:hover:text-neutral-100">
           Shop
         </Link>{" "}
         /{" "}

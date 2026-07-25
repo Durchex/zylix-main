@@ -45,7 +45,7 @@ export default function ComparePage() {
         <p className="mt-2 text-neutral-600">
           Add up to 4 products from the shop to compare their specs side by side.
         </p>
-        <Link href="/shop" className="mt-6">
+        <Link href="/products" className="mt-6">
           <Button>Browse products</Button>
         </Link>
       </Container>

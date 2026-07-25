@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
       <h2>Contact</h2>
       <p>
         Questions about this policy can be sent via our{" "}
-        <a href="/support/contact" className="text-brand-600 underline underline-offset-2">
+        <a href="/contact" className="text-brand-600 underline underline-offset-2">
           Contact page
         </a>
         .

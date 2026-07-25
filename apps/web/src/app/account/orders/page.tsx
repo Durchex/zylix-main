@@ -49,7 +49,7 @@ export default function OrdersPage() {
           <div className="rounded-2xl border border-neutral-200 bg-white p-8 text-center">
             <p className="text-sm text-neutral-500">You haven&apos;t placed any orders yet.</p>
             <Link
-              href="/shop"
+              href="/products"
               className="mt-3 inline-block text-sm font-medium text-brand-600 underline underline-offset-2"
             >
               Start shopping

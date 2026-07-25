@@ -21,7 +21,7 @@ export default function CartPage() {
       <Container className="flex min-h-[50vh] flex-col items-center justify-center py-16 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-ink-900">Your cart is empty</h1>
         <p className="mt-2 text-neutral-600">Browse the catalog and add something you love.</p>
-        <Link href="/shop" className="mt-6">
+        <Link href="/products" className="mt-6">
           <Button>Start shopping</Button>
         </Link>
       </Container>

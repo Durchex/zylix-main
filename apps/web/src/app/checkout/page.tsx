@@ -53,7 +53,7 @@ export default function CheckoutPage() {
       <Container className="flex min-h-[50vh] flex-col items-center justify-center py-16 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-ink-900 dark:text-neutral-50">Your cart is empty</h1>
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">Add items to your cart before checking out.</p>
-        <Button className="mt-6" onClick={() => router.push("/shop")}>
+        <Button className="mt-6" onClick={() => router.push("/products")}>
           Browse products
         </Button>
       </Container>

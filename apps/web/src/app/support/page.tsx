@@ -25,7 +25,7 @@ const SUPPORT_LINKS = [
     description: "Start a return or learn how refunds work.",
   },
   {
-    href: "/support/contact",
+    href: "/contact",
     title: "Contact Us",
     description: "Reach our support team directly.",
   },
