@@ -67,7 +67,7 @@ export default function GiftCardsPage() {
     <Container className="max-w-lg py-12">
       <h1 className="text-3xl font-bold tracking-tight text-ink-900">Gift Cards</h1>
       <p className="mt-2 text-neutral-600">
-        Send a Zylix gift card — redeemable on any purchase, never expires.
+        Send a ZylixStore gift card — redeemable on any purchase, never expires.
       </p>
 
       <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>

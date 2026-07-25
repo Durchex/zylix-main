@@ -3,14 +3,14 @@ import { LegalLayout } from "@/components/storefront/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Zylix and Durchex D.A.M Company LTD collect, use, and protect your data.",
+  description: "How ZylixStore and Durchex D.A.M Company LTD collect, use, and protect your data.",
 };
 
 export default function PrivacyPolicyPage() {
   return (
     <LegalLayout title="Privacy Policy" updatedAt="14 July 2026">
       <p>
-        Zylix (&ldquo;Zylix,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) is operated by Durchex
+        ZylixStore (&ldquo;ZylixStore,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) is operated by Durchex
         D.A.M Company LTD. This Privacy Policy explains what personal data we collect when you
         use zylix.com, why we collect it, and the choices you have.
       </p>

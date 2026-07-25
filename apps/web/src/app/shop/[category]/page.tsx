@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const title = categoryTitle(category);
   return {
     title,
-    description: `Shop ${title} at Zylix — premium electronics, delivered across Nigeria.`,
+    description: `Shop ${title} at ZylixStore — premium electronics, delivered across Nigeria.`,
   };
 }
 

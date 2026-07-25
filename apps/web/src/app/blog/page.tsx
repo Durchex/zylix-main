@@ -8,7 +8,7 @@ import type { PaginatedResult } from "@/types/product";
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "Buying guides, product comparisons, and tech news from Zylix.",
+  description: "Buying guides, product comparisons, and tech news from ZylixStore.",
 };
 
 export default async function BlogPage() {
@@ -20,7 +20,7 @@ export default async function BlogPage() {
 
   return (
     <Container className="py-12">
-      <h1 className="text-3xl font-bold tracking-tight text-ink-900">The Zylix Blog</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-ink-900">The ZylixStore Blog</h1>
       <p className="mt-2 max-w-xl text-neutral-600">
         Buying guides, comparisons, and the latest in consumer tech.
       </p>

@@ -16,7 +16,7 @@ import { DialogDemo } from "@/app/style-guide/DialogDemo";
 
 export const metadata: Metadata = {
   title: "Style Guide",
-  description: "Zylix internal design system reference.",
+  description: "ZylixStore internal design system reference.",
 };
 
 const colorSwatches: Array<{ name: string; className: string }> = [
@@ -46,10 +46,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function StyleGuidePage() {
   return (
     <Container className="py-16">
-      <p className="text-sm uppercase tracking-[0.3em] text-brand-600">Zylix</p>
+      <p className="text-sm uppercase tracking-[0.3em] text-brand-600">ZylixStore</p>
       <h1 className="mt-2 text-4xl font-bold tracking-tight text-ink-900">Design System</h1>
       <p className="mt-3 max-w-2xl text-neutral-600">
-        Internal reference for the Zylix component library. Every component here is
+        Internal reference for the ZylixStore component library. Every component here is
         production code from <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-sm">
           src/components/ui
         </code>{" "}

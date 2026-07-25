@@ -3,14 +3,14 @@ import { LegalLayout } from "@/components/storefront/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
-  description: "How Zylix uses cookies and similar technologies.",
+  description: "How ZylixStore uses cookies and similar technologies.",
 };
 
 export default function CookiePolicyPage() {
   return (
     <LegalLayout title="Cookie Policy" updatedAt="14 July 2026">
       <p>
-        Zylix uses cookies and similar technologies to keep you signed in, remember your cart and
+        ZylixStore uses cookies and similar technologies to keep you signed in, remember your cart and
         preferences, and understand how the site is used so we can improve it.
       </p>
 
@@ -32,7 +32,7 @@ export default function CookiePolicyPage() {
       <h2>Managing cookies</h2>
       <p>
         Most browsers let you block or delete cookies in their settings. Blocking essential
-        cookies may prevent parts of Zylix — like staying signed in or completing checkout — from
+        cookies may prevent parts of ZylixStore — like staying signed in or completing checkout — from
         working correctly.
       </p>
     </LegalLayout>

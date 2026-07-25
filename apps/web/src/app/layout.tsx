@@ -14,11 +14,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Zylix — Technology Made Simple.",
-    template: "%s | Zylix",
+    default: "ZylixStore — Technology Made Simple.",
+    template: "%s | ZylixStore",
   },
   description:
-    "Zylix is a premium electronics marketplace for smartphones, laptops, gaming, wearables, and home appliances. Powered by Durchex D.A.M Company LTD.",
+    "ZylixStore is a premium electronics marketplace for smartphones, laptops, gaming, wearables, and home appliances. Powered by Durchex D.A.M Company LTD.",
 };
 
 export default function RootLayout({

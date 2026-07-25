@@ -4,14 +4,14 @@ import { LegalLayout } from "@/components/storefront/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Shipping Policy",
-  description: "Delivery timelines, fees, and coverage for Zylix orders.",
+  description: "Delivery timelines, fees, and coverage for ZylixStore orders.",
 };
 
 export default function ShippingPolicyPage() {
   return (
     <LegalLayout title="Shipping Policy" updatedAt="14 July 2026">
       <p>
-        Zylix ships across Nigeria via our logistics partners. Shipping fees and estimated
+        ZylixStore ships across Nigeria via our logistics partners. Shipping fees and estimated
         delivery windows are shown at checkout before you pay, based on your delivery address.
       </p>
 
