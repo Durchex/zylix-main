@@ -47,7 +47,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 30d
       - key: TWO_FACTOR_ISSUER
-        value: Zylix
+        value: ZylixStore
       - key: DEFAULT_CURRENCY
         value: NGN
       - key: DEFAULT_LOCALE
