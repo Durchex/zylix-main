@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
 import { ProductGrid, ProductGridEmpty } from "@/components/storefront/ProductGrid";
+import { HeroBanner } from "@/components/home/HeroBanner";
+import { LogoStrip } from "@/components/home/LogoStrip";
+import { DealsOfTheDaySection } from "@/components/home/DealsOfTheDaySection";
+import { AppDownloadCTA } from "@/components/home/AppDownloadCTA";
+import { TrustBadges } from "@/components/home/TrustBadges";
+import { FadeIn } from "@/components/motion/FadeIn";
 import { serverApiRequest } from "@/lib/server-api";
 import type { PaginatedResult, ProductSummary } from "@/types/product";
 
@@ -14,21 +19,22 @@ import type { PaginatedResult, ProductSummary } from "@/types/product";
 // earlier Suspense-streaming and external-rewrites issues on this host.
 export const revalidate = 0;
 
-const FEATURED_CATEGORIES = [
-  { name: "Smartphones", slug: "smartphones" },
-  { name: "Laptops", slug: "laptops" },
-  { name: "Gaming", slug: "gaming" },
-  { name: "Smartwatches", slug: "smartwatches" },
-  { name: "Accessories", slug: "accessories" },
-  { name: "Home Electronics", slug: "home-electronics" },
+const TRUSTED_BRANDS = ["Samsung", "Apple", "Sony", "LG", "Xiaomi", "Dell", "HP", "Bose"];
+const PRESS_MENTIONS = [
+  "Featured in TechCrunch",
+  "Best E-commerce App 2024",
+  "TechRadar Recommended",
+  "Deloitte Fast 50",
 ];
 
 async function ProductSection({
   title,
+  description,
   href,
   query,
 }: {
   title: string;
+  description?: string;
   href: string;
   query: string;
 }) {
@@ -46,8 +52,13 @@ async function ProductSection({
 
   return (
     <section className="border-t border-neutral-200 py-8 dark:border-surface-800">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-ink-900 dark:text-neutral-50">{title}</h2>
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-ink-900 dark:text-neutral-50">{title}</h2>
+          {description && (
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">{description}</p>
+          )}
+        </div>
         <Link href={href} className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400">
           See all &rsaquo;
         </Link>
@@ -69,45 +80,37 @@ export default function HomePage() {
       </div>
 
       <Container>
-        <section className="flex flex-col items-start gap-3 border-b border-neutral-200 py-6 dark:border-surface-800 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-ink-900 dark:text-neutral-50 sm:text-2xl">
-              Technology Made Simple.
-            </h1>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-              Curated, authenticated smartphones, laptops, gaming gear, and home electronics —
-              from a store built for the way you actually shop.
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            <Link href="/shop">
-              <Button>Shop all products</Button>
-            </Link>
-            <Link href="/deals">
-              <Button variant="outline">Today&apos;s deals</Button>
-            </Link>
-          </div>
-        </section>
+        <div className="py-6">
+          <FadeIn>
+            <HeroBanner />
+          </FadeIn>
+        </div>
 
-        <section className="py-6">
-          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-900 dark:text-neutral-50">
-            Shop by category
-          </h2>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {FEATURED_CATEGORIES.map((category) => (
-              <Link
-                key={category.slug}
-                href={`/shop/${category.slug}`}
-                className="flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-2 py-3 text-center text-xs font-medium text-ink-900 hover:border-brand-400 hover:text-brand-700 dark:border-surface-800 dark:bg-surface-900 dark:text-neutral-100 dark:hover:border-brand-500 dark:hover:text-brand-400"
-              >
-                {category.name}
-              </Link>
-            ))}
-          </div>
-        </section>
+        <ProductSection
+          title="Featured products"
+          description="Handpicked across smartphones, laptops, and home electronics."
+          href="/shop?featured=true"
+          query="?featured=true&pageSize=8"
+        />
 
-        <ProductSection title="Featured products" href="/shop?featured=true" query="?featured=true&pageSize=8" />
-        <ProductSection title="New arrivals" href="/new-arrivals" query="?sort=newest&pageSize=8" />
+        <ProductSection
+          title="Top selling"
+          description="The most popular electronics with shoppers right now."
+          href="/shop?sort=rating"
+          query="?sort=rating&pageSize=8"
+        />
+
+        <LogoStrip eyebrow="Trusted brands" title="Shop the brands you know" items={TRUSTED_BRANDS} />
+
+        <DealsOfTheDaySection />
+
+        <div className="py-8">
+          <AppDownloadCTA />
+        </div>
+
+        <TrustBadges />
+
+        <LogoStrip eyebrow="Recognition" title="As seen in" items={PRESS_MENTIONS} dense />
       </Container>
     </>
   );
