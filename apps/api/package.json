@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
     "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
