@@ -19,7 +19,16 @@ import type { PaginatedResult, ProductSummary } from "@/types/product";
 // earlier Suspense-streaming and external-rewrites issues on this host.
 export const revalidate = 0;
 
-const TRUSTED_BRANDS = ["Samsung", "Apple", "Sony", "LG", "Xiaomi", "Dell", "HP", "Bose"];
+const TRUSTED_BRANDS = [
+  "Hisense",
+  "TCL",
+  "Bruhm",
+  "Midea",
+  "Firman",
+  "Thermocool",
+  "Skyrun",
+  "Scanfrost",
+];
 const PRESS_MENTIONS = [
   "Featured in TechCrunch",
   "Best E-commerce App 2024",
