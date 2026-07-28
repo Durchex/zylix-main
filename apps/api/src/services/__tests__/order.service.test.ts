@@ -13,6 +13,7 @@ jest.mock("@/lib/prisma", () => ({
       count: jest.fn(),
     },
     payment: { update: jest.fn() },
+    shippingZone: { findMany: jest.fn().mockResolvedValue([]) },
     $transaction: jest.fn((arg: unknown) => {
       // order.service.ts calls $transaction two different ways: with a
       // callback (order creation / rollback) and, in other services, with

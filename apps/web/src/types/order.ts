@@ -75,4 +75,7 @@ export interface OrderDetail extends OrderSummary {
   billingAddress: OrderAddress | null;
   statusHistory: OrderStatusHistoryEntry[];
   payments: OrderPayment[];
+  trackingNumber: string | null;
+  carrier: string | null;
+  shippedAt: string | null;
 }

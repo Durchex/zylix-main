@@ -85,9 +85,23 @@ export interface AdminOrderDetail extends AdminOrderSummary {
   subtotal: string;
   shippingFee: string;
   tax: string;
+  trackingNumber: string | null;
+  carrier: string | null;
+  shippedAt: string | null;
   items: AdminOrderItem[];
   statusHistory: Array<{ id: string; status: OrderStatus; note: string | null; createdAt: string }>;
   shippingAddress: { fullName: string; line1: string; city: string; state: string } | null;
+}
+
+export interface AdminShippingZone {
+  id: string;
+  name: string;
+  states: string[];
+  fee: string;
+  freeShippingThreshold: string | null;
+  estimatedDaysMin: number;
+  estimatedDaysMax: number;
+  isDefault: boolean;
 }
 
 export type SellerStatus = "PENDING" | "APPROVED" | "SUSPENDED" | "REJECTED";

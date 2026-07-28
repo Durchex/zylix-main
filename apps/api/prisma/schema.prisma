@@ -537,6 +537,9 @@ model Order {
   shippingAddress   Address?    @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   billingAddressId  String?
   billingAddress    Address?    @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  trackingNumber    String?
+  carrier           String?
+  shippedAt         DateTime?
   placedAt          DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
@@ -551,6 +554,23 @@ model Order {
 
   @@index([userId])
   @@index([status])
+}
+
+// Admin-configurable delivery pricing, keyed off Address.state (a free-text
+// field, not a DB enum — matching against `states` is done in application
+// code, not a foreign key). `isDefault` marks the fallback zone used when an
+// address's state doesn't match any zone's `states` list.
+model ShippingZone {
+  id                     String   @id @default(cuid())
+  name                   String
+  states                 String[]
+  fee                    Decimal  @db.Decimal(10, 2)
+  freeShippingThreshold  Decimal? @db.Decimal(12, 2)
+  estimatedDaysMin       Int
+  estimatedDaysMax       Int
+  isDefault              Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model OrderItem {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { env } from "@/config/env";
 import { ApiError } from "@/middleware/errorHandler";
 import { getPaymentProvider } from "@/services/payment";
+import { shippingService } from "@/services/shipping.service";
 import { paginate } from "@/utils/pagination";
 import type { CreateOrderInput, MyOrderListQuery } from "@/validation/order.schema";
 
@@ -20,9 +21,6 @@ const myOrderListInclude = {
     },
   },
 } as const;
-
-const FLAT_SHIPPING_FEE = 2000;
-const FREE_SHIPPING_THRESHOLD = 100_000;
 
 function generateOrderNumber(): string {
   return `ZLX-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
@@ -72,7 +70,8 @@ export const orderService = {
     });
 
     const subtotalValue = lineItems.reduce((sum, item) => sum + Number(item.subtotal), 0);
-    const shippingFee = subtotalValue >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_FEE;
+    const quote = await shippingService.getQuote(input.shippingAddress.state, subtotalValue);
+    const shippingFee = quote.fee;
     const total = subtotalValue + shippingFee;
 
     const order = await prisma.$transaction(async (tx) => {
@@ -210,6 +209,9 @@ export const orderService = {
         status: true,
         placedAt: true,
         guestEmail: true,
+        trackingNumber: true,
+        carrier: true,
+        shippedAt: true,
         user: { select: { email: true } },
       },
     });
@@ -225,6 +227,9 @@ export const orderService = {
       orderNumber: order.orderNumber,
       status: order.status,
       placedAt: order.placedAt,
+      trackingNumber: order.trackingNumber,
+      carrier: order.carrier,
+      shippedAt: order.shippedAt,
       estimatedDelivery: null as string | null,
     };
   },

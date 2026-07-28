@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { formatPrice, cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart.store";
 import { apiRequest, ApiRequestError } from "@/lib/api-client";
+import { shippingApi, type ShippingQuote } from "@/lib/api/shipping";
 
 const PAYMENT_METHODS = [
   { id: "FLUTTERWAVE", label: "Flutterwave", detail: "Card, bank transfer, USSD, mobile money", primary: true, available: true },
@@ -31,12 +32,27 @@ export default function CheckoutPaymentPage() {
   const [selectedMethod, setSelectedMethod] = useState("FLUTTERWAVE");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shippingQuote, setShippingQuote] = useState<ShippingQuote | null>(null);
+  const [shippingError, setShippingError] = useState(false);
 
   useEffect(() => {
     if (items.length === 0) {
       router.replace("/cart");
     }
   }, [items, router]);
+
+  useEffect(() => {
+    const address = JSON.parse(sessionStorage.getItem("zylix-checkout-address") ?? "{}");
+    if (!address.state) return;
+
+    shippingApi
+      .getQuote(address.state, subtotal)
+      .then((res) => setShippingQuote(res.quote))
+      .catch(() => setShippingError(true));
+    // Only needs to run once on mount — the address was already finalized on
+    // the previous checkout step and subtotal doesn't change on this page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handlePlaceOrder() {
     setError(null);
@@ -120,9 +136,35 @@ export default function CheckoutPaymentPage() {
         <Card className="h-fit">
           <CardBody className="space-y-4">
             <h2 className="font-semibold text-ink-900 dark:text-neutral-100">Total</h2>
-            <div className="flex justify-between text-base font-semibold">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Subtotal</span>
+                <span className="text-ink-900 dark:text-neutral-100">{formatPrice(subtotal, currency)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Shipping</span>
+                {shippingQuote ? (
+                  <span className="text-ink-900 dark:text-neutral-100">
+                    {shippingQuote.fee === 0 ? "Free" : formatPrice(shippingQuote.fee, currency)}
+                  </span>
+                ) : shippingError ? (
+                  <span className="text-neutral-500">Calculated at checkout</span>
+                ) : (
+                  <span className="text-neutral-500">Calculating…</span>
+                )}
+              </div>
+              {shippingQuote && (
+                <p className="text-xs text-neutral-500">
+                  Estimated delivery in {shippingQuote.estimatedDaysMin}–{shippingQuote.estimatedDaysMax}{" "}
+                  business days ({shippingQuote.zoneName}).
+                </p>
+              )}
+            </div>
+            <div className="flex justify-between border-t border-neutral-200 pt-3 text-base font-semibold dark:border-surface-800">
               <span className="text-ink-900 dark:text-neutral-100">Amount due</span>
-              <span className="text-ink-900 dark:text-neutral-100">{formatPrice(subtotal, currency)}</span>
+              <span className="text-ink-900 dark:text-neutral-100">
+                {formatPrice(subtotal + (shippingQuote?.fee ?? 0), currency)}
+              </span>
             </div>
             <Button className="w-full" isLoading={placing} onClick={handlePlaceOrder}>
               Place order

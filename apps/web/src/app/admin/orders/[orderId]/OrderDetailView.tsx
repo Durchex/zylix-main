@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Select";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -27,6 +28,10 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [nextStatus, setNextStatus] = useState<OrderStatus>("PENDING");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrier, setCarrier] = useState("");
+  const [isUpdatingTracking, setIsUpdatingTracking] = useState(false);
+  const [trackingError, setTrackingError] = useState<string | null>(null);
 
   useEffect(() => {
     adminOrdersApi
@@ -34,6 +39,8 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
       .then((res) => {
         setOrder(res.order);
         setNextStatus(res.order.status);
+        setTrackingNumber(res.order.trackingNumber ?? "");
+        setCarrier(res.order.carrier ?? "");
       })
       .catch((err) => setError(err instanceof ApiRequestError ? err.message : "Something went wrong."));
   }, [orderId]);
@@ -48,6 +55,19 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
       setError(err instanceof ApiRequestError ? err.message : "Something went wrong.");
     } finally {
       setIsUpdating(false);
+    }
+  }
+
+  async function handleUpdateTracking() {
+    setIsUpdatingTracking(true);
+    setTrackingError(null);
+    try {
+      const res = await adminOrdersApi.updateTracking(orderId, trackingNumber, carrier);
+      setOrder(res.order);
+    } catch (err) {
+      setTrackingError(err instanceof ApiRequestError ? err.message : "Something went wrong.");
+    } finally {
+      setIsUpdatingTracking(false);
     }
   }
 
@@ -148,6 +168,31 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
           </Select>
           <Button onClick={handleUpdateStatus} isLoading={isUpdating}>
             Update status
+          </Button>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <p className="font-semibold text-ink-900">Delivery tracking</p>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          {trackingError && <Alert variant="error">{trackingError}</Alert>}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Tracking number"
+              value={trackingNumber}
+              onChange={(e) => setTrackingNumber(e.target.value)}
+            />
+            <Input label="Carrier" value={carrier} onChange={(e) => setCarrier(e.target.value)} />
+          </div>
+          {order.shippedAt && (
+            <p className="text-sm text-neutral-500">
+              Shipped {new Date(order.shippedAt).toLocaleString("en-NG")}
+            </p>
+          )}
+          <Button onClick={handleUpdateTracking} isLoading={isUpdatingTracking}>
+            Save tracking info
           </Button>
         </CardBody>
       </Card>

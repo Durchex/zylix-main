@@ -6,6 +6,7 @@ import type {
   AdminOrderSummary,
   AdminProduct,
   AdminSeller,
+  AdminShippingZone,
   AdminUser,
   AuditLogEntry,
   DashboardStats,
@@ -98,6 +99,33 @@ export const adminOrdersApi = {
       method: "PATCH",
       body: { status, note },
     });
+  },
+  updateTracking(id: string, trackingNumber: string, carrier: string) {
+    return apiRequest<{ order: AdminOrderDetail }>(`/admin/orders/${id}/tracking`, {
+      method: "PATCH",
+      body: { trackingNumber, carrier },
+    });
+  },
+};
+
+export const adminShippingApi = {
+  list() {
+    return apiRequest<{ zones: AdminShippingZone[] }>("/admin/shipping-zones");
+  },
+  create(input: Record<string, unknown>) {
+    return apiRequest<{ zone: AdminShippingZone }>("/admin/shipping-zones", {
+      method: "POST",
+      body: input,
+    });
+  },
+  update(id: string, input: Record<string, unknown>) {
+    return apiRequest<{ zone: AdminShippingZone }>(`/admin/shipping-zones/${id}`, {
+      method: "PATCH",
+      body: input,
+    });
+  },
+  remove(id: string) {
+    return apiRequest<void>(`/admin/shipping-zones/${id}`, { method: "DELETE" });
   },
 };
 

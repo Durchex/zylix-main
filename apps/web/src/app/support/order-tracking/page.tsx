@@ -22,6 +22,9 @@ interface OrderStatusResult {
   orderNumber: string;
   status: string;
   placedAt: string;
+  trackingNumber: string | null;
+  carrier: string | null;
+  shippedAt: string | null;
   estimatedDelivery: string | null;
 }
 
@@ -87,6 +90,17 @@ export default function OrderTrackingPage() {
           <p className="mt-2 text-sm text-neutral-500">
             Placed {new Date(result.placedAt).toLocaleDateString("en-NG")}
           </p>
+          {result.trackingNumber && (
+            <p className="mt-1 text-sm text-neutral-500">
+              Tracking: {result.trackingNumber}
+              {result.carrier && ` via ${result.carrier}`}
+            </p>
+          )}
+          {result.shippedAt && (
+            <p className="mt-1 text-sm text-neutral-500">
+              Shipped {new Date(result.shippedAt).toLocaleDateString("en-NG")}
+            </p>
+          )}
           {result.estimatedDelivery && (
             <p className="mt-1 text-sm text-neutral-500">
               Estimated delivery {new Date(result.estimatedDelivery).toLocaleDateString("en-NG")}
