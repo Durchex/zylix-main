@@ -22,10 +22,10 @@ export const revalidate = 0;
 const TRUSTED_BRANDS = [
   "Hisense",
   "TCL",
-  "Bruhm",
+  "Brühm",
   "Midea",
   "Firman",
-  "Thermocool",
+  "Haier Thermocool",
   "Skyrun",
   "Scanfrost",
 ];
