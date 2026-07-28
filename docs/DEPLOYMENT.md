@@ -4,7 +4,7 @@
 **Status:** Configuration & documentation complete — Milestone 13 of 13
 **Depends on:** [FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md), [PAYMENTS.md](./PAYMENTS.md), [TESTING.md](./TESTING.md)
 
-No cloud accounts (Vercel, Railway, a managed Postgres/Redis provider, a domain registrar) or Docker daemon exist in this sandbox — the same standing limitation noted in every prior milestone. This document is the complete, genuine deployment configuration and runbook, written so that following it against real accounts produces a working production deployment. Nothing described here has actually been deployed or Docker-built from this environment; §6 says exactly that, explicitly.
+The web app runs on Vercel and the API runs on Render — the concrete, live path this project actually uses. §6's Docker/self-hosting path remains available as an alternative but hasn't been deployed from here; everything else in this document reflects the real configuration.
 
 ---
 
@@ -49,21 +49,20 @@ The web app has no `NEXT_PUBLIC_*` variables today — every client-side API cal
 
 `apps/api/src/config/env.ts` loads `.env` from a path relative to its own compiled location, but only as a **local-dev convenience** — `dotenv.config()` fails silently (not a thrown error) when the file doesn't exist, which is exactly the production case: no `.env` file is ever built into a container image (`.dockerignore` excludes it), and the Zod schema parses whatever the platform already injected into `process.env` instead.
 
-## 3. Deploying the API
+## 3. Deploying the API (Render)
 
-Target: any platform that runs a Dockerfile and exposes a port (Railway and Render both do this with zero extra config beyond pointing at `apps/api/Dockerfile`; Fly.io and a bare VPS work the same way via `fly deploy` / `docker run`).
+The concrete path this project uses. `render.yaml` (repo root) is a Render Blueprint that provisions the managed Postgres database and the API's web service together.
 
-1. Provision managed Postgres and Redis; note their connection strings.
-2. Create the service, pointing its build at this repo with:
-   - **Dockerfile path:** `apps/api/Dockerfile`
-   - **Build context:** repo root (`.`) — required, since `npm ci` needs every workspace's `package.json` to resolve the shared `package-lock.json`. Passing `apps/api` alone as the context will fail the build.
-3. Set every `api`-scoped variable from the table above. Set `APP_URL` to the web app's real production URL (needed before step 5's webhook step, but can be set to a placeholder and updated after Vercel is live).
-4. Deploy. The image's `HEALTHCHECK` hits `GET /api/v1/health` (already built in Milestone 8) — point the platform's own health-check probe at the same path so a degraded DB/Redis connection (503) is caught before traffic is routed to it.
-5. Run the production migration once, against the live `DATABASE_URL`:
+1. Render dashboard → New → Blueprint → select this repo → it reads `render.yaml`, provisioning a managed Postgres database and the API web service (built from `apps/api/Dockerfile`, build context = repo root, health check = `/api/v1/health`, JWT secrets auto-generated).
+2. Render's managed Redis product ("Key Value") isn't in the blueprint — its schema field has changed across Render's product history, so create it manually: New → Key Value → copy its connection string into the API service's `REDIS_URL` env var.
+3. Set the remaining `sync: false` variables in the blueprint (`APP_URL`, Cloudinary, payment provider keys) in the API service's Environment tab. `APP_URL` needs the Vercel URL from §4 — can be set to a placeholder and updated after Vercel is live.
+4. Run the production migration once, against the Render Postgres external connection string:
    ```bash
    npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma
    ```
-   Run this from the platform's shell/one-off job runner, or locally with `DATABASE_URL` pointed at the production database — never `prisma migrate dev` against production (it can generate and prompt for destructive changes interactively).
+   Run this from Render's shell/one-off job runner, or locally with `DATABASE_URL` pointed at the production database — never `prisma migrate dev` against production (it can generate and prompt for destructive changes interactively).
+
+Other Dockerfile-based platforms (Railway, Fly.io, a bare VPS) work the same way in principle — point them at `apps/api/Dockerfile` with the repo root as build context (required, since `npm ci` needs every workspace's `package.json` to resolve the shared `package-lock.json`), set the same `api`-scoped variables from the table above, and point their health-check probe at `GET /api/v1/health`.
 
 ## 4. Deploying the web app (Vercel)
 
@@ -100,7 +99,7 @@ Both Dockerfiles build from the **repo root** as context (`docker build -f apps/
 
 ## 7. CI
 
-`.github/workflows/ci.yml` runs on every push/PR to `main`: lint + `tsc --noEmit` + `jest` for each app independently (mirroring [TESTING.md](./TESTING.md) — no live database needed, since every test mocks Prisma), then a combined `npm run build` job gated on both passing. It does not deploy anything — no `VERCEL_TOKEN`/platform credentials exist in this sandbox to wire up continuous deployment, and Vercel's own GitHub integration (auto-deploy on push once the project is imported, per §4) already covers the web app without needing a custom Actions step.
+`.github/workflows/ci.yml` runs on every push/PR to `main`: lint + `tsc --noEmit` + `jest` for each app independently (mirroring [TESTING.md](./TESTING.md) — no live database needed, since every test mocks Prisma), then a combined `npm run build` job gated on both passing. It does not deploy anything — Vercel's own GitHub integration (auto-deploy on push once the project is imported, per §4) already covers the web app without needing a custom Actions step, and Render redeploys on push to `main` the same way.
 
 ## 8. Rollback
 
@@ -108,24 +107,6 @@ Both Dockerfiles build from the **repo root** as context (`docker build -f apps/
 - **API:** redeploy the previous image tag/commit on whichever platform is used (Railway/Render both keep deployment history with one-click rollback; a bare Docker host should tag images by commit SHA so `docker run zylix-api:<previous-sha>` is always available).
 - **Database migrations:** `prisma migrate deploy` is forward-only by design. A migration that must be undone needs a new forward migration that reverses the change — never edit or delete an already-applied migration file.
 
-## 9. Render + Netlify path
+## 9. Cross-origin cookies
 
-The concrete path this deployment actually used, as an alternative to §3/§4's Railway/Vercel example — same architecture, different providers. `render.yaml` (repo root) and `netlify.toml` (repo root) hold the config; both still follow §2's environment variable contract exactly.
-
-**API on Render:**
-1. Render dashboard → New → Blueprint → select this repo → it reads `render.yaml`, which provisions a managed Postgres database and the `zylix-api` web service (built from `apps/api/Dockerfile`, context = repo root, health check = `/api/v1/health`, JWT secrets auto-generated).
-2. Render's managed Redis product ("Key Value") isn't in the blueprint — its schema field has changed across Render's product history, so create it manually: New → Key Value → copy its connection string into `zylix-api`'s `REDIS_URL` env var.
-3. Set the remaining `sync: false` variables in the blueprint (`APP_URL`, Cloudinary, payment provider keys) in the `zylix-api` service's Environment tab. `APP_URL` needs the Netlify URL from the next step.
-4. Run the migration once against the Render Postgres external connection string: `npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma` (same command as §3 step 5).
-
-**Web on Netlify:**
-1. Netlify dashboard → Add new site → Import from Git → select this repo. `netlify.toml` sets the base directory (`apps/web`) and build command (`cd ../.. && npm ci && npm run build:web`, same monorepo-root-install reasoning as `apps/web/vercel.json`), and registers `@netlify/plugin-nextjs` for SSR support.
-2. Site configuration → Environment variables → add:
-   - `API_URL` — the Render API's `.onrender.com` URL (or custom domain). Used server-side by `serverApiRequest` (Server Components) — always a direct call, never proxied.
-   - `NEXT_PUBLIC_API_URL` — same value. Used client-side by `apiRequest` (`apps/web/src/lib/api-client.ts`) to call the API directly via CORS instead of through `next.config.mjs`'s `rewrites()`. **Required on Netlify specifically** — its Next.js Runtime doesn't reliably proxy `rewrites()` to an external origin (observed as a bare 500 from Netlify's own edge layer, never reaching the API); direct CORS calls sidestep that entirely. Vercel's rewrites() proxy works fine, so this is optional there.
-3. Deploy. Confirm in the deployed site's Network tab that requests like `/api/v1/auth/refresh` go directly to the `.onrender.com` origin (not the Netlify domain) and succeed.
-4. Attach a custom domain if desired, then go back and set the Render API's `APP_URL` to the final Netlify URL and redeploy.
-
-**Cross-origin cookies:** since the frontend and API are on different domains here, the refresh-token cookie is set with `sameSite: "none"` in production (`apps/api/src/controllers/auth.controller.ts`) — required for the browser to send it on a cross-site fetch at all. Paired with `secure: true` (already conditional on `NODE_ENV === "production"`), per the `SameSite=None` spec requirement. Local dev keeps `sameSite: "lax"` since frontend and API are same-site there via the rewrite proxy.
-
-Everything else — webhook registration, health check monitoring, migration discipline, rollback — follows §5 and §8 unchanged; only the hosting provider differs.
+Since the frontend (Vercel) and API (Render) are on different domains, the refresh-token cookie is set with `sameSite: "none"` in production (`apps/api/src/controllers/auth.controller.ts`) — required for the browser to send it on a cross-site fetch at all. Paired with `secure: true` (already conditional on `NODE_ENV === "production"`), per the `SameSite=None` spec requirement. Local dev keeps `sameSite: "lax"` since frontend and API are same-site there via the rewrite proxy.
