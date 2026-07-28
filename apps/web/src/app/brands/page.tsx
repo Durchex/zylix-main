@@ -7,7 +7,7 @@ import type { SellerSummary } from "@/types/seller";
 
 export const metadata: Metadata = {
   title: "Brands & Sellers",
-  description: "Browse every brand and approved seller on Zylix.",
+  description: "Browse every brand and approved seller on ZylixStore.",
 };
 
 export default async function BrandsPage() {
@@ -20,7 +20,7 @@ export default async function BrandsPage() {
     <Container className="py-12">
       <h1 className="text-3xl font-bold tracking-tight text-ink-900">Brands & Sellers</h1>
       <p className="mt-2 max-w-xl text-neutral-600">
-        Every seller on Zylix is verified before their products go live.
+        Every seller on ZylixStore is verified before their products go live.
       </p>
 
       {sellers.length === 0 ? (

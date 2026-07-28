@@ -8,7 +8,7 @@ import type { PaginatedResult, ProductSummary } from "@/types/product";
 
 export const metadata: Metadata = {
   title: "Shop All Products",
-  description: "Browse the full Zylix catalog of smartphones, laptops, gaming gear, and more.",
+  description: "Browse the full ZylixStore catalog of smartphones, laptops, gaming gear, and more.",
 };
 
 interface ShopPageProps {

@@ -6,7 +6,7 @@ import type { PaginatedResult, ProductSummary } from "@/types/product";
 
 export const metadata: Metadata = {
   title: "Deals",
-  description: "Discounted smartphones, laptops, and electronics at Zylix.",
+  description: "Discounted smartphones, laptops, and electronics at ZylixStore.",
 };
 
 export default async function DealsPage() {
@@ -20,7 +20,7 @@ export default async function DealsPage() {
     <Container className="py-10">
       <h1 className="text-3xl font-bold tracking-tight text-ink-900">Deals</h1>
       <p className="mt-2 max-w-xl text-neutral-600">
-        Limited-time price drops across the Zylix catalog.
+        Limited-time price drops across the ZylixStore catalog.
       </p>
       <div className="mt-8">
         {products.length > 0 ? (

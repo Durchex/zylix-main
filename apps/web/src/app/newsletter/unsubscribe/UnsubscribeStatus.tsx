@@ -50,7 +50,7 @@ export function UnsubscribeStatus() {
         )}
         {state === "success" && (
           <Alert variant="success" title="You've been unsubscribed">
-            You won&rsquo;t receive marketing emails from Zylix going forward. You&rsquo;ll still
+            You won&rsquo;t receive marketing emails from ZylixStore going forward. You&rsquo;ll still
             get order and account notifications.
           </Alert>
         )}

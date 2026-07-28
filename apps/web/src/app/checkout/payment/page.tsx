@@ -15,7 +15,7 @@ const PAYMENT_METHODS = [
   { id: "FLUTTERWAVE", label: "Flutterwave", detail: "Card, bank transfer, USSD, mobile money", primary: true, available: true },
   { id: "PAYSTACK", label: "Paystack", detail: "Card, bank transfer, USSD", primary: true, available: true },
   { id: "STRIPE", label: "Stripe", detail: "International cards", primary: false, available: true },
-  { id: "WALLET", label: "Zylix Wallet", detail: "Pay instantly from your wallet balance", primary: false, available: true },
+  { id: "WALLET", label: "ZylixStore Wallet", detail: "Pay instantly from your wallet balance", primary: false, available: true },
   { id: "BANK_TRANSFER", label: "Bank Transfer", detail: "Manual transfer, confirmed within 1 business day", primary: false, available: true },
   { id: "PAYPAL", label: "PayPal", detail: "Coming soon", primary: false, available: false },
   { id: "APPLE_PAY", label: "Apple Pay", detail: "Coming soon", primary: false, available: false },

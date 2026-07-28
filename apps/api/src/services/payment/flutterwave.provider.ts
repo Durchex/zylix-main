@@ -39,7 +39,7 @@ export const flutterwaveProvider: PaymentProviderAdapter = {
         currency: params.currency,
         redirect_url: params.redirectUrl,
         customer: { email: params.email },
-        customizations: { title: "Zylix", description: `Order ${params.orderNumber}` },
+        customizations: { title: "ZylixStore", description: `Order ${params.orderNumber}` },
       }),
     });
 

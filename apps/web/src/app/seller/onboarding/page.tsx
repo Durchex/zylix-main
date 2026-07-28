@@ -45,7 +45,7 @@ export default function SellerOnboardingPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-bold tracking-tight text-ink-900">Become a Zylix Seller</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink-900">Become a ZylixStore Seller</h1>
       <p className="mt-2 text-neutral-600">
         Tell us about your store. Your application will be reviewed before your products go live.
       </p>

@@ -3,7 +3,7 @@ import { LegalLayout } from "@/components/storefront/LegalLayout";
 
 export const metadata: Metadata = {
   title: "Returns & Refunds Policy",
-  description: "How returns, exchanges, and refunds work at Zylix.",
+  description: "How returns, exchanges, and refunds work at ZylixStore.",
 };
 
 export default function ReturnsPolicyPage() {
@@ -33,7 +33,7 @@ export default function ReturnsPolicyPage() {
 
       <h2>Refunds</h2>
       <p>
-        Once we receive and inspect a returned item, refunds are issued to your Zylix Wallet
+        Once we receive and inspect a returned item, refunds are issued to your ZylixStore Wallet
         immediately, or back to your original payment method within 5–10 business days depending
         on your provider. Store credit refunds can be used on any future purchase.
       </p>

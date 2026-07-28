@@ -31,7 +31,7 @@ export const stripeProvider: PaymentProviderAdapter = {
         {
           price_data: {
             currency: params.currency.toLowerCase(),
-            product_data: { name: `Zylix Order ${params.orderNumber}` },
+            product_data: { name: `ZylixStore Order ${params.orderNumber}` },
             unit_amount: Math.round(params.amount * 100),
           },
           quantity: 1,

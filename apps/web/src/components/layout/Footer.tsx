@@ -27,7 +27,7 @@ const FOOTER_COLUMNS: Array<{ title: string; links: Array<{ label: string; href:
   {
     title: "Company",
     links: [
-      { label: "About Zylix", href: "/about" },
+      { label: "About ZylixStore", href: "/about" },
       { label: "Blog", href: "/blog" },
       { label: "Gift Cards", href: "/gift-cards" },
       { label: "Refer & Earn", href: "/referral" },
@@ -89,7 +89,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-2 text-center">
-          <p className="text-sm">&copy; {new Date().getFullYear()} Zylix. All rights reserved.</p>
+          <p className="text-sm">&copy; {new Date().getFullYear()} ZylixStore. All rights reserved.</p>
           <p className="text-sm font-medium text-white">Powered by Durchex D.A.M Company LTD</p>
         </div>
       </div>

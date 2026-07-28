@@ -64,7 +64,7 @@ export default function RegisterPage() {
 
   return (
     <Container className="flex min-h-[70vh] max-w-md flex-col justify-center py-16">
-      <p className="text-sm uppercase tracking-[0.3em] text-brand-600">Zylix</p>
+      <p className="text-sm uppercase tracking-[0.3em] text-brand-600">ZylixStore</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink-900">Create your account</h1>
       <p className="mt-2 text-neutral-600">
         Already have an account?{" "}

@@ -4,12 +4,12 @@ import { Accordion, type AccordionItemData } from "@/components/ui/Accordion";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Frequently asked questions about shopping on Zylix.",
+  description: "Frequently asked questions about shopping on ZylixStore.",
 };
 
 const FAQ_ITEMS: AccordionItemData[] = [
   {
-    question: "What payment methods does Zylix accept?",
+    question: "What payment methods does ZylixStore accept?",
     answer:
       "Flutterwave and Paystack (cards, bank transfer, USSD, mobile money) are our primary payment options, settled in Naira. Stripe, PayPal, Apple Pay, and Google Pay are also available for international cards.",
   },
@@ -24,9 +24,9 @@ const FAQ_ITEMS: AccordionItemData[] = [
       "Yes — most items can be returned within 7 days of delivery if unused and in original packaging. See our Returns & Refunds Policy for full details.",
   },
   {
-    question: "Are the products on Zylix genuine?",
+    question: "Are the products on ZylixStore genuine?",
     answer:
-      "Yes. Every product sold on Zylix — whether from Durchex D.A.M directly or an approved third-party seller — goes through our catalog verification process before it can be listed.",
+      "Yes. Every product sold on ZylixStore — whether from Durchex D.A.M directly or an approved third-party seller — goes through our catalog verification process before it can be listed.",
   },
   {
     question: "How do I track my order?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS: AccordionItemData[] = [
   {
     question: "Do you offer warranty support?",
     answer:
-      "Manufacturer warranties apply to all electronics sold on Zylix. Warranty terms are listed on each product page; contact Support if you need help with a claim.",
+      "Manufacturer warranties apply to all electronics sold on ZylixStore. Warranty terms are listed on each product page; contact Support if you need help with a claim.",
   },
 ];
 

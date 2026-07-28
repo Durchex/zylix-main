@@ -5,7 +5,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 
 export const metadata: Metadata = {
   title: "Support Center",
-  description: "Get help with orders, returns, and more at Zylix.",
+  description: "Get help with orders, returns, and more at ZylixStore.",
 };
 
 const SUPPORT_LINKS = [

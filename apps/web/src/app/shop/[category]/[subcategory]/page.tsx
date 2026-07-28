@@ -20,7 +20,7 @@ function titleFromSlug(slug: string) {
 export async function generateMetadata({ params }: SubcategoryPageProps): Promise<Metadata> {
   const { subcategory } = await params;
   const title = titleFromSlug(subcategory);
-  return { title, description: `Shop ${title} at Zylix.` };
+  return { title, description: `Shop ${title} at ZylixStore.` };
 }
 
 export default async function SubcategoryPage({ params }: SubcategoryPageProps) {

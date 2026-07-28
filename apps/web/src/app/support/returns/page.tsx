@@ -6,7 +6,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 
 export const metadata: Metadata = {
   title: "Returns & Refunds",
-  description: "Learn how returns and refunds work at Zylix, or start a return.",
+  description: "Learn how returns and refunds work at ZylixStore, or start a return.",
 };
 
 const STEPS = [
