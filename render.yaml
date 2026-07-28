@@ -27,7 +27,7 @@ services:
         value: production
       - key: PORT
         value: "4000"
-      # Set once the Netlify site is live (see docs/DEPLOYMENT.md).
+      # Set once the Vercel site is live (see docs/DEPLOYMENT.md).
       - key: APP_URL
         sync: false
       - key: DATABASE_URL

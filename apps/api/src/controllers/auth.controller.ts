@@ -18,7 +18,7 @@ const refreshCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === "production",
   // "none" is required for the frontend/API to authenticate across two
-  // different domains (e.g. Netlify + Render) — browsers won't send a "lax"
+  // different domains (e.g. Vercel + Render) — browsers won't send a "lax"
   // cookie on a cross-site fetch. Only valid paired with secure:true, so
   // local dev (http://localhost, no TLS) stays on "lax" where frontend and
   // API are same-site anyway via the Next.js rewrite proxy.
