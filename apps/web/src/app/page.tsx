@@ -20,14 +20,14 @@ import type { PaginatedResult, ProductSummary } from "@/types/product";
 export const revalidate = 0;
 
 const TRUSTED_BRANDS = [
-  "Hisense",
-  "TCL",
-  "Brühm",
-  "Midea",
-  "Firman",
-  "Haier Thermocool",
-  "Skyrun",
-  "Scanfrost",
+  { name: "Hisense", src: "/brands/hisense.png" },
+  { name: "TCL", src: "/brands/tcl.png" },
+  { name: "Brühm", src: "/brands/bruhm.png" },
+  { name: "Midea", src: "/brands/midea.png" },
+  { name: "Firman", src: "/brands/firman.png" },
+  { name: "Haier Thermocool", src: "/brands/haier-thermocool.png" },
+  { name: "Skyrun", src: "/brands/skyrun.png" },
+  { name: "Scanfrost", src: "/brands/scanfrost.png" },
 ];
 const PRESS_MENTIONS = [
   "Featured in TechCrunch",
