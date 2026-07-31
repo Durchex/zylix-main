@@ -6,6 +6,7 @@ import { Rating } from "@/components/ui/Rating";
 import { serverApiRequest } from "@/lib/server-api";
 import { ImageGallery } from "@/app/products/[slug]/ImageGallery";
 import { AddToCartPanel } from "@/app/products/[slug]/AddToCartPanel";
+import { RecentlyViewedTracker } from "@/components/storefront/RecentlyViewedTracker";
 import type { ProductDetail } from "@/types/product";
 
 interface ProductPageProps {
@@ -74,6 +75,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <RecentlyViewedTracker
+        item={{
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          brand: product.brand,
+          price: product.basePrice,
+          currency: product.currency,
+          imageUrl: product.primaryImage?.url ?? null,
+        }}
       />
 
       <nav className="mb-6 text-sm text-neutral-500 dark:text-neutral-400">
