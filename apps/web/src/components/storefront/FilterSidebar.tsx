@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
 const CATEGORIES = [
@@ -27,12 +29,28 @@ export function FilterSidebar({ activeCategory }: { activeCategory?: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [brand, setBrand] = useState(searchParams.get("brand") ?? "");
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
+
   function updateParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function updateParams(entries: Record<string, string | null>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(entries)) {
+      if (value) {
+        params.set(key, value);
+      } else {
+        params.delete(key);
+      }
     }
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -74,6 +92,51 @@ export function FilterSidebar({ activeCategory }: { activeCategory?: string }) {
       )}
 
       <div>
+        <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-neutral-100">Brand</h3>
+        <div className="flex gap-2">
+          <Input
+            aria-label="Filter by brand"
+            placeholder="e.g. Aria"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && updateParam("brand", brand || null)}
+          />
+          <Button variant="outline" size="sm" onClick={() => updateParam("brand", brand || null)}>
+            Go
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-neutral-100">Price range (₦)</h3>
+        <div className="flex items-center gap-2">
+          <Input
+            aria-label="Minimum price"
+            type="number"
+            placeholder="Min"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
+          <span className="text-neutral-400">–</span>
+          <Input
+            aria-label="Maximum price"
+            type="number"
+            placeholder="Max"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-2 w-full"
+          onClick={() => updateParams({ minPrice: minPrice || null, maxPrice: maxPrice || null })}
+        >
+          Apply price range
+        </Button>
+      </div>
+
+      <div>
         <h3 className="mb-3 text-sm font-semibold text-ink-900 dark:text-neutral-100">Featured only</h3>
         <Checkbox
           label="Show featured products"
@@ -85,7 +148,12 @@ export function FilterSidebar({ activeCategory }: { activeCategory?: string }) {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => router.push(pathname)}
+        onClick={() => {
+          setBrand("");
+          setMinPrice("");
+          setMaxPrice("");
+          router.push(pathname);
+        }}
         className="w-full"
       >
         Clear filters
