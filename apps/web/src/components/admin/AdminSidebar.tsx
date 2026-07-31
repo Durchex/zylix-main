@@ -24,6 +24,10 @@ const NAV_SECTIONS: Array<{ title: string; links: Array<{ label: string; href: s
     links: [{ label: "All Orders", href: "/admin/orders" }],
   },
   {
+    title: "Logistics",
+    links: [{ label: "Shipping Zones", href: "/admin/shipping" }],
+  },
+  {
     title: "Sellers",
     links: [
       { label: "All Sellers", href: "/admin/sellers" },

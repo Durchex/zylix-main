@@ -2,7 +2,11 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/middleware/errorHandler";
 import { paginate } from "@/utils/pagination";
-import type { AdminOrderListQuery, UpdateOrderStatusInput } from "@/validation/admin/order.schema";
+import type {
+  AdminOrderListQuery,
+  UpdateOrderStatusInput,
+  UpdateOrderTrackingInput,
+} from "@/validation/admin/order.schema";
 
 const summarySelect = {
   id: true,
@@ -69,6 +73,25 @@ export const adminOrderService = {
         statusHistory: {
           create: { status: input.status, note: input.note, changedBy: adminUserId },
         },
+      },
+      include: detailInclude,
+    });
+  },
+
+  async updateTracking(id: string, input: UpdateOrderTrackingInput) {
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) {
+      throw new ApiError(404, "Order not found");
+    }
+
+    return prisma.order.update({
+      where: { id },
+      data: {
+        trackingNumber: input.trackingNumber,
+        carrier: input.carrier,
+        // Stamp shippedAt the first time a tracking number is set; never
+        // overwrite it on subsequent edits (e.g. a carrier correction).
+        shippedAt: existing.shippedAt ?? (input.trackingNumber ? new Date() : existing.shippedAt),
       },
       include: detailInclude,
     });

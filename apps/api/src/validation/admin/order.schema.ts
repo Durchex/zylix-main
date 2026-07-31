@@ -23,3 +23,9 @@ export const updateOrderStatusSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+
+export const updateOrderTrackingSchema = z.object({
+  trackingNumber: z.string().trim().min(1).max(100).nullable().optional(),
+  carrier: z.string().trim().min(1).max(100).nullable().optional(),
+});
+export type UpdateOrderTrackingInput = z.infer<typeof updateOrderTrackingSchema>;

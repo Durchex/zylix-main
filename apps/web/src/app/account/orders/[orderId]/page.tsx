@@ -69,20 +69,35 @@ export default function OrderDetailPage() {
         })}
       </p>
 
-      {order.statusHistory.length > 0 && (
+      {(order.trackingNumber || order.statusHistory.length > 0) && (
         <Card className="mt-6">
           <CardHeader>
             <p className="font-semibold text-ink-900">Tracking</p>
           </CardHeader>
-          <CardBody>
-            <ol className="space-y-3">
-              {order.statusHistory.map((entry) => (
-                <li key={entry.id} className="flex items-center justify-between text-sm">
-                  <span className="text-ink-900">{entry.status}</span>
-                  <span className="text-neutral-500">{new Date(entry.createdAt).toLocaleString("en-NG")}</span>
-                </li>
-              ))}
-            </ol>
+          <CardBody className="space-y-4">
+            {order.trackingNumber && (
+              <div className="flex items-center justify-between rounded-xl bg-neutral-50 p-3 text-sm">
+                <div>
+                  <p className="text-ink-900">{order.trackingNumber}</p>
+                  {order.carrier && <p className="text-neutral-500">{order.carrier}</p>}
+                </div>
+                {order.shippedAt && (
+                  <span className="text-neutral-500">
+                    Shipped {new Date(order.shippedAt).toLocaleDateString("en-NG")}
+                  </span>
+                )}
+              </div>
+            )}
+            {order.statusHistory.length > 0 && (
+              <ol className="space-y-3">
+                {order.statusHistory.map((entry) => (
+                  <li key={entry.id} className="flex items-center justify-between text-sm">
+                    <span className="text-ink-900">{entry.status}</span>
+                    <span className="text-neutral-500">{new Date(entry.createdAt).toLocaleString("en-NG")}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
           </CardBody>
         </Card>
       )}
