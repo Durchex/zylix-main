@@ -5,13 +5,19 @@
 # changed across Render's product history, so it's created manually in the
 # dashboard (New -> Key Value) per the guide, then wired to REDIS_URL below.
 #
+# Both resources use Render's free plan for initial testing — no cost, but
+# the web service spins down after 15 min idle (cold start on next request)
+# and the free Postgres database expires after a trial period. Change
+# `plan: free` to `plan: starter` on both once ready for a persistent,
+# always-on production backend.
+#
 # Import: Render dashboard -> New -> Blueprint -> select this repo.
 
 databases:
   - name: zylix-postgres
     databaseName: zylix
     user: zylix
-    plan: starter
+    plan: free
     postgresMajorVersion: "16"
 
 services:
@@ -20,7 +26,7 @@ services:
     runtime: docker
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
