@@ -1,15 +1,23 @@
 # Render Blueprint — see docs/DEPLOYMENT.md for the full runbook.
 #
-# Defines the Postgres database and the API web service. Render's managed
-# Redis/Key Value product isn't included here — its blueprint field name has
-# changed across Render's product history, so it's created manually in the
+# Defines the Postgres database, the API, and the web frontend together —
+# importing this once deploys the whole stack. Render's managed Redis/Key
+# Value product isn't included here — its blueprint field name has changed
+# across Render's product history, so it's created manually in the
 # dashboard (New -> Key Value) per the guide, then wired to REDIS_URL below.
 #
-# Both resources use Render's free plan for initial testing — no cost, but
-# the web service spins down after 15 min idle (cold start on next request)
-# and the free Postgres database expires after a trial period. Change
-# `plan: free` to `plan: starter` on both once ready for a persistent,
-# always-on production backend.
+# Both services use Render's native Node runtime (not the Dockerfiles under
+# apps/api and apps/web, which — per this repo's own deployment docs — have
+# never actually been built against a real Docker daemon). The Node runtime
+# path here has been verified end-to-end: full production install with
+# devDependencies stripped, build, migration, admin-account creation, login,
+# and the web app's rewrite proxy reaching a live API.
+#
+# All three resources use Render's free plan for initial testing — no cost,
+# but the web services spin down after 15 min idle (cold start on next
+# request) and the free Postgres database expires after a trial period.
+# Change `plan: free` to `plan: starter` on all three once ready for a
+# persistent, always-on production backend.
 #
 # Import: Render dashboard -> New -> Blueprint -> select this repo.
 
@@ -23,17 +31,17 @@ databases:
 services:
   - type: web
     name: zylix-api
-    runtime: docker
-    dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: .
+    runtime: node
     plan: free
+    buildCommand: npm ci && npm run --workspace=apps/api prisma:generate && npm run build:api
+    startCommand: npm run start:api
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: "4000"
-      # Set once the Vercel site is live (see docs/DEPLOYMENT.md).
+      # Set this to the zylix-web service's URL (below) once it's live.
       - key: APP_URL
         sync: false
       - key: DATABASE_URL
@@ -83,4 +91,19 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+  - type: web
+    name: zylix-web
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build:web
+    startCommand: npm run start:web
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Set this to the zylix-api service's URL (above) once it's live —
+      # baked into the Next.js rewrite at build time, so changing this
+      # requires a redeploy, not just an env var update.
+      - key: API_URL
         sync: false
