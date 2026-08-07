@@ -16,6 +16,7 @@ import { referralRouter } from "@/routes/referral.routes";
 import { newsletterRouter } from "@/routes/newsletter.routes";
 import { adminRouter } from "@/routes/admin";
 import { sellerDashboardRouter } from "@/routes/seller";
+import { setupRouter } from "@/routes/setup.routes";
 
 export const apiRouter = Router();
 
@@ -36,5 +37,6 @@ apiRouter.use("/referrals", referralRouter);
 apiRouter.use("/newsletter", newsletterRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/seller", sellerDashboardRouter);
+apiRouter.use("/setup", setupRouter);
 
 // Additional domain routers (cart, wishlist, ...) remain for later milestones.
