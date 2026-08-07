@@ -115,6 +115,15 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Without an explicit PORT, Render falls back to auto-detecting the
+      # port the process binds to, which was unreliable for edge routing
+      # here (the app logged "Ready"/"live" every time, but public requests
+      # still 502'd) — zylix-api works reliably specifically because it
+      # already declares PORT explicitly. Matches the port apps/web's start
+      # script already bound to in practice (its `${PORT:-3000}` fallback
+      # only applies if this is unset).
+      - key: PORT
+        value: "10000"
       # Set this to the zylix-api service's URL (above) once it's live —
       # baked into the Next.js rewrite at build time, so changing this
       # requires a redeploy, not just an env var update.
