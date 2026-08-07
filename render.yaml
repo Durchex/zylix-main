@@ -13,6 +13,13 @@
 # devDependencies stripped, build, migration, admin-account creation, login,
 # and the web app's rewrite proxy reaching a live API.
 #
+# zylix-api's buildCommand runs `prisma migrate deploy` on every deploy
+# (safe/idempotent — a no-op once migrations are applied), and the
+# GET /api/v1/setup/admin?secret=<SETUP_SECRET>&email=...&password=...
+# endpoint provisions the first admin account over HTTP — both needed
+# because Render's Shell/one-off-command feature requires a paid plan,
+# unavailable on the free plan used here.
+#
 # All three resources use Render's free plan for initial testing — no cost,
 # but the web services spin down after 15 min idle (cold start on next
 # request) and the free Postgres database expires after a trial period.
@@ -33,7 +40,7 @@ services:
     name: zylix-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run --workspace=apps/api prisma:generate && npm run build:api
+    buildCommand: npm ci && npm run --workspace=apps/api prisma:generate && npm run build:api && npm run --workspace=apps/api prisma:deploy
     startCommand: npm run start:api
     healthCheckPath: /api/v1/health
     envVars:
@@ -44,6 +51,12 @@ services:
       # Set this to the zylix-web service's URL (below) once it's live.
       - key: APP_URL
         sync: false
+      # One-time admin bootstrap over HTTP (GET /api/v1/setup/admin?secret=
+      # <this value>&email=...&password=...) — for hosts like Render's free
+      # plan where the Shell/one-off-command feature isn't available. Find
+      # this value in this service's Environment tab after deploy.
+      - key: SETUP_SECRET
+        generateValue: true
       - key: DATABASE_URL
         fromDatabase:
           name: zylix-postgres
