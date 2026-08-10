@@ -21,6 +21,12 @@ export async function serverApiRequest<T>(
   try {
     const res = await fetch(url, {
       next: { revalidate: options.revalidate ?? 60, tags: options.tags },
+      // Without this, a cold/unreachable API hangs this fetch indefinitely —
+      // and since callers await it directly on the render path (no
+      // Suspense boundary, see ProductRail), the whole page hangs with it,
+      // which upstream platforms observe as a request timeout (502) rather
+      // than the graceful empty-state this try/catch is meant to produce.
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) {
