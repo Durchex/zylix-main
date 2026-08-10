@@ -8,6 +8,16 @@ const SESSION_MARKER_COOKIE = "zylix_session";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Temporary diagnostic: zylix-web has been returning 502 on every request
+  // on Render's free plan despite clean startup logs and no crash ever
+  // being logged, so there's no visibility into whether requests reach this
+  // process at all. This logs every request that hits Next's proxy (Next
+  // 16's renamed middleware) so Render's Logs tab gives a definitive answer
+  // — if this line is missing for a request that 502s in the browser, the
+  // problem is upstream of the app; if present, it's in rendering.
+  console.log(`[proxy] ${new Date().toISOString()} ${request.method} ${pathname}`);
+
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
   if (!isProtected) {
@@ -25,5 +35,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/seller/:path*", "/admin/:path*"],
+  // Widened temporarily (was just the protected prefixes) so the
+  // diagnostic log above fires for every real page request, including "/",
+  // which is one of the routes that 502s.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
