@@ -15,9 +15,12 @@ function pad(value: number) {
 }
 
 export function CountdownTimer({ targetIso }: { targetIso: string }) {
-  const [remaining, setRemaining] = useState(() => getRemaining(targetIso));
+  // Render the same value on the server and the first client pass. Computing
+  // from Date.now() here makes hydration race the clock by a few seconds.
+  const [remaining, setRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    setRemaining(getRemaining(targetIso));
     const id = setInterval(() => setRemaining(getRemaining(targetIso)), 1000);
     return () => clearInterval(id);
   }, [targetIso]);

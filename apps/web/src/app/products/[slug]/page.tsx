@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
@@ -72,8 +73,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <Container className="py-10">
-      <script
+      <Script
+        id="product-json-ld"
         type="application/ld+json"
+        strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <RecentlyViewedTracker

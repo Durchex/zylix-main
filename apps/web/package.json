@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build && cp -r public .next/standalone/apps/web/public && mkdir -p .next/standalone/apps/web/.next && cp -r .next/static .next/standalone/apps/web/.next/static",
+    "build": "next build && node ../../scripts/prepare-web-standalone.js",
     "start": "PORT=${PORT:-3000} node .next/standalone/apps/web/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
   "dependencies": {
+    "@fontsource/poppins": "^5.3.0",
     "@hookform/resolvers": "^3.9.0",
     "@types/node": "^20.14.15",
     "@types/react": "^18.3.3",

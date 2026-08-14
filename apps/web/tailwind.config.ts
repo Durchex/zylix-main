@@ -98,7 +98,15 @@ const config: Config = {
         info: { DEFAULT: "#2B7FD9", subtle: "#E8F1FC" },
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: [
+          "Poppins",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "\"Segoe UI\"",
+          "sans-serif",
+        ],
       },
       // Dense catalog sites use minimal/sharp corners, not the rounded
       // "premium app" look — 2xl used to be 1.25rem, now a modest 0.375rem.

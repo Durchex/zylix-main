@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Logo } from "@/components/layout/Logo";
-import { Container } from "@/components/ui/Container";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useCartStore } from "@/store/cart.store";
 import { useWishlistStore } from "@/store/wishlist.store";
@@ -69,7 +68,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white dark:border-surface-800 dark:bg-surface-950">
-      <Container className="flex h-16 items-center gap-4">
+      <div className="flex h-16 w-full items-center gap-4 px-4 sm:px-6 lg:px-8">
         <button
           type="button"
           className="flex h-10 w-10 items-center justify-center rounded-full text-ink-900 hover:bg-neutral-100 dark:text-neutral-100 dark:hover:bg-surface-800 lg:hidden"
@@ -141,7 +140,7 @@ export function Header() {
             {user ? user.firstName : "Log in"}
           </Link>
         </div>
-      </Container>
+      </div>
 
       {mobileMenuOpen && (
         <nav className="border-t border-neutral-200 px-6 py-4 dark:border-surface-800 lg:hidden">

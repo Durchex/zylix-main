@@ -33,12 +33,14 @@ export async function serverApiRequest<T>(
       // Temporary diagnostic logging — this path silently returned null with
       // zero visibility into why on Netlify. Remove once the root cause of
       // products not showing on the homepage is confirmed and fixed.
-      console.error("[serverApiRequest] non-ok response", { url, status: res.status, statusText: res.statusText });
+      console.warn("[serverApiRequest] non-ok response", { url, status: res.status, statusText: res.statusText });
       return null;
     }
     return (await res.json()) as T;
   } catch (err) {
-    console.error("[serverApiRequest] fetch threw", { url, error: err instanceof Error ? err.message : String(err) });
+    // A temporarily unavailable catalog API should render the caller's empty
+    // state instead of triggering Next.js's development error overlay.
+    console.warn("[serverApiRequest] fetch failed", { url, error: err instanceof Error ? err.message : String(err) });
     return null;
   }
 }
