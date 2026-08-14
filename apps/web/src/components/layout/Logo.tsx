@@ -36,7 +36,7 @@ export function Logo({
       <span
         className={cn(
           "inline-flex items-baseline text-xl font-bold tracking-tight",
-          tone === "dark" ? "text-ink-900" : "text-white",
+          tone === "dark" ? "text-ink-900 dark:text-white" : "text-white",
         )}
       >
         ZylixStore
