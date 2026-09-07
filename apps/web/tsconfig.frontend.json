@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false, "noEmit": true },
+  "include": [
+    "src/app/**/*.tsx",
+    "src/app/**/*.ts",
+    "src/components/**/*.tsx",
+    "src/lib/**/*.ts",
+    "src/types/**/*.ts",
+    "src/store/**/*.ts",
+    "src/proxy.ts",
+    "next-env.d.ts"
+  ],
+  // tsconfig.json's own "exclude" (test files, .next build output) isn't
+  // inherited once this file declares its own — TypeScript replaces rather
+  // than merges "exclude" across `extends` — so it's repeated here plus the
+  // API route handlers, which tsconfig.server.json already covers.
+  "exclude": [
+    "node_modules",
+    ".next",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "jest.config.js",
+    "jest.setup.ts",
+    "src/app/api/**"
+  ]
+}

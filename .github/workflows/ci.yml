@@ -29,11 +29,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint:web
-      # The full apps/web typecheck (frontend + the ported Mongoose/Next.js
-      # API layer together) is heavy enough to OOM well below the default
-      # heap on some environments — bump it explicitly rather than let a
-      # runner-dependent default decide.
-      - run: NODE_OPTIONS=--max-old-space-size=6144 npm --prefix apps/web run typecheck
+      # `typecheck` (apps/web/package.json) runs this as two smaller scoped
+      # passes (frontend, then the Mongoose/Next.js API layer) rather than
+      # one whole-project tsc invocation — checking everything in one pass
+      # was heavy enough to OOM Vercel's build machine outright. Each half
+      # fits comfortably within a normal runner's memory on its own.
+      - run: npm --prefix apps/web run typecheck
       - run: npm run test:web
 
   build:

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run typecheck:server && npm run typecheck:frontend",
+    "typecheck:server": "tsc -p tsconfig.server.json",
+    "typecheck:frontend": "tsc -p tsconfig.frontend.json",
     "test": "jest"
   },
   "dependencies": {
