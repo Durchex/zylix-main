@@ -16,13 +16,11 @@ import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { apiRequest, ApiRequestError } from "@/lib/api-client";
 import { adminProductsApi } from "@/lib/api/admin";
 import type { CategorySummary } from "@/types/product";
-import type { SellerSummary } from "@/types/seller";
 
 const rowSchema = z.object({
   name: z.string().trim().min(1, "Required"),
   brand: z.string().trim().min(1, "Required"),
   categoryId: z.string().min(1, "Required"),
-  sellerId: z.string().min(1, "Required"),
   sku: z.string().trim().min(1, "Required"),
   description: z.string().trim().min(1, "Required"),
   basePrice: z.coerce.number().positive("Must be > 0"),
@@ -40,7 +38,6 @@ const emptyRow: BulkFormValues["rows"][number] = {
   name: "",
   brand: "",
   categoryId: "",
-  sellerId: "",
   sku: "",
   description: "",
   basePrice: 0,
@@ -59,7 +56,6 @@ function slugify(name: string) {
 export default function BulkAddProductsPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<CategorySummary[]>([]);
-  const [sellers, setSellers] = useState<SellerSummary[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<{ succeededCount: number; failed: Array<{ name: string; error: string }> } | null>(null);
@@ -79,14 +75,8 @@ export default function BulkAddProductsPage() {
   const { fields, append, remove } = useFieldArray({ control, name: "rows" });
 
   useEffect(() => {
-    Promise.all([
-      apiRequest<{ categories: CategorySummary[] }>("/categories"),
-      apiRequest<{ sellers: SellerSummary[] }>("/sellers"),
-    ])
-      .then(([categoryRes, sellerRes]) => {
-        setCategories(categoryRes.categories);
-        setSellers(sellerRes.sellers);
-      })
+    apiRequest<{ categories: CategorySummary[] }>("/categories")
+      .then((categoryRes) => setCategories(categoryRes.categories))
       .catch((err) => setLoadError(err instanceof ApiRequestError ? err.message : "Something went wrong."));
   }, []);
 
@@ -99,7 +89,6 @@ export default function BulkAddProductsPage() {
         slug: slugify(row.name),
         brand: row.brand,
         categoryId: row.categoryId,
-        sellerId: row.sellerId,
         sku: row.sku,
         description: row.description,
         basePrice: row.basePrice,
@@ -184,7 +173,7 @@ export default function BulkAddProductsPage() {
                   {...register(`rows.${index}.brand`)}
                 />
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Select
                   label="Category"
                   error={errors.rows?.[index]?.categoryId?.message}
@@ -194,18 +183,6 @@ export default function BulkAddProductsPage() {
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
-                    </option>
-                  ))}
-                </Select>
-                <Select
-                  label="Seller"
-                  error={errors.rows?.[index]?.sellerId?.message}
-                  {...register(`rows.${index}.sellerId`)}
-                >
-                  <option value="">Select seller</option>
-                  {sellers.map((seller) => (
-                    <option key={seller.id} value={seller.id}>
-                      {seller.storeName}
                     </option>
                   ))}
                 </Select>

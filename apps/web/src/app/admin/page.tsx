@@ -58,7 +58,6 @@ export default function AdminDashboardPage() {
             <StatCard label="Total Revenue" value={formatPrice(Number(stats.totalRevenue))} />
             <StatCard label="Total Products" value={stats.totalProducts} />
             <StatCard label="Total Users" value={stats.totalUsers} />
-            <StatCard label="Pending Seller Applications" value={stats.pendingSellerApplications} />
             <StatCard label="Low Stock Variants" value={stats.lowStockVariants} />
           </div>
 

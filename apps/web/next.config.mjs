@@ -1,19 +1,10 @@
-import path from "node:path";
-
-const apiUrl = process.env.API_URL ?? "http://localhost:4000";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Produces a minimal apps/web/.next/standalone/ bundle with only the
-  // production dependencies actually traced from the build — what
-  // apps/web/Dockerfile copies into the runtime image. Vercel ignores this
-  // (it does its own build tracing), so it's safe for both targets.
-  output: "standalone",
-  // node_modules are hoisted to the monorepo root under npm workspaces —
-  // without this, Next's file tracer roots itself at apps/web and misses
-  // hoisted dependencies in the standalone build.
-  outputFileTracingRoot: path.join(process.cwd(), "../../"),
+  // Vercel does its own build tracing and ignores `output: "standalone"` —
+  // left unset now that Vercel is the only deploy target. (It previously
+  // also produced the apps/web/.next/standalone/ bundle apps/web/Dockerfile
+  // copied into a self-hosted image; that path is gone along with Render.)
   images: {
     remotePatterns: [
       {
@@ -27,15 +18,18 @@ const nextConfig = {
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  // The API used to be a separate Express service, reached by rewriting
+  // /api/* to its external URL (API_URL). It's now implemented directly as
+  // route handlers under src/app/api/v1/**, in this same Next.js app, so
+  // there's nothing left to proxy — keeping the rewrite would have shadowed
+  // those routes (a request matching a dynamic API segment resolves after
+  // rewrites run, so it would've been sent to a now-nonexistent external
+  // API instead of the local handler).
   async rewrites() {
     return [
       {
         source: "/favicon.ico",
         destination: "/icon",
-      },
-      {
-        source: "/api/:path*",
-        destination: `${apiUrl}/api/:path*`,
       },
     ];
   },

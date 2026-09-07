@@ -1,26 +1,8 @@
-// Some hosting platforms (e.g. Netlify's automatic pre-build dependency
-// install) run `npm install` in a context where apps/api's devDependencies
-// aren't guaranteed to be present. This postinstall hook regenerates the
-// Prisma client when the CLI is available, and skips harmlessly otherwise
-// instead of failing the whole install — the platform-specific build
-// command (Render's Dockerfile, Netlify's netlify.toml build command) is
-// responsible for running prisma generate for real where it's actually needed.
-const { existsSync } = require("node:fs");
-const { execSync } = require("node:child_process");
-const path = require("node:path");
-
-const isWindows = process.platform === "win32";
-const prismaCli = path.join(
-  __dirname,
-  "..",
-  "node_modules",
-  ".bin",
-  isWindows ? "prisma.cmd" : "prisma",
-);
-
-if (!existsSync(prismaCli)) {
-  console.log("postinstall: prisma CLI not found in this install scope, skipping prisma generate.");
-  process.exit(0);
-}
-
-execSync("npm run prisma:generate", { stdio: "inherit" });
+// The app no longer uses Prisma/Postgres (apps/api, the old Express service
+// it belonged to, is being decommissioned in favor of Mongoose/MongoDB
+// route handlers inside apps/web) — this hook is now a deliberate no-op so
+// `npm install` (including Vercel's build) doesn't spend time generating a
+// Prisma client nothing imports anymore. Kept as a file rather than removed
+// from package.json's "postinstall" so removing apps/api later doesn't
+// require touching package.json again.
+process.exit(0);

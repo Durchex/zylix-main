@@ -11,7 +11,7 @@ const TEAM = [
   {
     name: "Tunde Okafor",
     role: "Head of Operations",
-    bio: "Oversees logistics, fulfillment, and seller onboarding nationwide.",
+    bio: "Oversees logistics and fulfillment nationwide.",
   },
   {
     name: "Ngozi Eze",

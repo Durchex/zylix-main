@@ -22,7 +22,7 @@ export default function AdminAuditLogPage() {
     <div>
       <h1 className="text-2xl font-bold tracking-tight text-ink-900">Audit Log</h1>
       <p className="mt-2 text-sm text-neutral-600">
-        A record of sensitive admin actions — seller approvals/rejections and user status changes.
+        A record of sensitive admin actions — user status changes and other administrative actions.
       </p>
 
       {error && (

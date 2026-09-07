@@ -8,6 +8,13 @@ dotenv.config({ path: path.resolve(__dirname, "../../../../.env") });
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.string().url().default("http://localhost:3000"),
+  // Extra browser origins allowed to call the API with credentials, beyond
+  // APP_URL — comma-separated. Needed whenever the site is reachable at more
+  // than one origin (apex + www, a custom domain alongside the platform's
+  // *.vercel.app/*.onrender.com URL, a staging domain): CORS matches the
+  // Origin header exactly, so "https://zylixstore.online" and
+  // "https://www.zylixstore.online" are two distinct entries.
+  CORS_ORIGINS: z.string().optional(),
   API_URL: z.string().url().default("http://localhost:4000"),
   PORT: z.coerce.number().default(4000),
 

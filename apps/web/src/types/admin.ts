@@ -37,7 +37,6 @@ export interface AdminProduct {
   images: AdminProductImage[];
   variants: AdminProductVariant[];
   category: { id: string; slug: string; name: string };
-  seller: { id: string; storeName: string; storeSlug: string };
 }
 
 export interface AdminCategory {
@@ -104,25 +103,12 @@ export interface AdminShippingZone {
   isDefault: boolean;
 }
 
-export type SellerStatus = "PENDING" | "APPROVED" | "SUSPENDED" | "REJECTED";
-
-export interface AdminSeller {
-  id: string;
-  storeName: string;
-  storeSlug: string;
-  description: string | null;
-  status: SellerStatus;
-  createdAt: string;
-  user: { id: string; firstName: string; lastName: string; email: string };
-  _count: { products: number };
-}
-
 export interface AdminUser {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: "CUSTOMER" | "SELLER" | "ADMIN";
+  role: "CUSTOMER" | "ADMIN";
   status: "ACTIVE" | "SUSPENDED" | "BANNED" | "PENDING_VERIFICATION";
   createdAt: string;
 }
@@ -156,7 +142,6 @@ export interface DashboardStats {
   totalRevenue: string;
   totalProducts: number;
   totalUsers: number;
-  pendingSellerApplications: number;
   lowStockVariants: number;
   recentOrders: Array<{
     id: string;

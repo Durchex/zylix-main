@@ -55,7 +55,7 @@ export function Header() {
   const wishlistCount = useWishlistStore((s) => s.productIds.length);
   const user = useAuthStore((s) => s.user);
 
-  const isDashboardShell = pathname.startsWith("/admin") || pathname.startsWith("/seller");
+  const isDashboardShell = pathname.startsWith("/admin");
   if (isDashboardShell) return null;
 
   function handleSearchSubmit(e: FormEvent) {

@@ -18,6 +18,16 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
+    // Build output. `.next/types` is still pulled in by `include` above (Next
+    // generates route type definitions there), but the rest — the dev server's
+    // chunk cache and the standalone bundle, which together carry a copy of
+    // every traced dependency — is compiled source, and handing it to tsc is
+    // what pushed the typecheck into an out-of-memory crash.
+    ".next/cache",
+    ".next/dev",
+    ".next/server",
+    ".next/static",
+    ".next/standalone",
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",

@@ -29,19 +29,11 @@ export default function TermsOfServicePage() {
         error, stock issue, or suspected fraud is identified after purchase.
       </p>
 
-      <h2>Sellers</h2>
-      <p>
-        Some products may be listed and fulfilled by approved third-party sellers rather than
-        Durchex D.A.M Company LTD directly. Seller listings are subject to ZylixStore&rsquo;s catalog
-        and quality standards, but the seller is responsible for accurate listing information and
-        timely fulfilment of their own orders.
-      </p>
-
       <h2>Prohibited conduct</h2>
       <ul>
         <li>Attempting to defraud ZylixStore, other users, or payment providers.</li>
         <li>Circumventing security features, rate limits, or account restrictions.</li>
-        <li>Reselling products in violation of manufacturer or seller terms.</li>
+        <li>Reselling products in violation of manufacturer terms.</li>
       </ul>
 
       <h2>Limitation of liability</h2>

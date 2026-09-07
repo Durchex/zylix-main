@@ -5,13 +5,11 @@ import type {
   AdminOrderDetail,
   AdminOrderSummary,
   AdminProduct,
-  AdminSeller,
   AdminShippingZone,
   AdminUser,
   AuditLogEntry,
   DashboardStats,
   OrderStatus,
-  SellerStatus,
 } from "@/types/admin";
 import type { PaginatedResult } from "@/types/product";
 
@@ -126,24 +124,6 @@ export const adminShippingApi = {
   },
   remove(id: string) {
     return apiRequest<void>(`/admin/shipping-zones/${id}`, { method: "DELETE" });
-  },
-};
-
-export const adminSellersApi = {
-  list(params: { status?: SellerStatus; page?: number; pageSize?: number } = {}) {
-    return apiRequest<PaginatedResult<AdminSeller>>(`/admin/sellers${buildQuery(params)}`);
-  },
-  getById(id: string) {
-    return apiRequest<{ seller: AdminSeller }>(`/admin/sellers/${id}`);
-  },
-  approve(id: string) {
-    return apiRequest<{ seller: AdminSeller }>(`/admin/sellers/${id}/approve`, { method: "PATCH" });
-  },
-  reject(id: string, reason?: string) {
-    return apiRequest<{ seller: AdminSeller }>(`/admin/sellers/${id}/reject`, {
-      method: "PATCH",
-      body: { reason },
-    });
   },
 };
 

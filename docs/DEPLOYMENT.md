@@ -1,10 +1,10 @@
 # ZYLIX — Deployment
 
-**Version:** 1.0
-**Status:** Configuration & documentation complete — Milestone 13 of 13
+**Version:** 2.0
+**Status:** Migrated off Render/Postgres/Redis onto a single Vercel deployment
 **Depends on:** [FOLDER_STRUCTURE.md](./FOLDER_STRUCTURE.md), [PAYMENTS.md](./PAYMENTS.md), [TESTING.md](./TESTING.md)
 
-The web app runs on Vercel and the API runs on Render — the concrete, live path this project actually uses. §6's Docker/self-hosting path remains available as an alternative but hasn't been deployed from here; everything else in this document reflects the real configuration.
+The app is one Next.js deployment on Vercel (`apps/web`) — there is no separate API service. What used to be `apps/api` (Express + Prisma/Postgres, deployed on Render) has been ported to route handlers inside `apps/web/src/app/api/v1/**`, running on Mongoose/MongoDB. Images are stored on Cloudinary, unchanged. `apps/api` itself still exists in the repo for reference during the transition but is no longer deployed anywhere — see §5.
 
 ---
 
@@ -14,99 +14,80 @@ The web app runs on Vercel and the API runs on Render — the concrete, live pat
 Browser
   │
   ▼
-Vercel (apps/web — Next.js, SSR + static)
-  │  • Same-origin to the browser always. next.config.mjs's rewrites()
-  │    proxy /api/:path* server-side to the API — the browser never talks
-  │    to the API's origin directly, so cookies (the refresh token) and
-  │    CORS stay simple regardless of how many Vercel preview URLs exist.
-  ▼
-Railway / Render / Fly.io / VPS (apps/api — Express, Dockerized)
+Vercel (apps/web — Next.js: pages + API route handlers, one deployment)
+  │  • Same origin, always — the browser only ever talks to this one URL.
+  │    No CORS, no cross-domain cookie concerns: they were the direct
+  │    cause of "domain change breaks login" incidents under the old
+  │    split Vercel+Render setup, and can't happen here by construction.
   │
-  ├──▶ Managed PostgreSQL (Neon / Supabase / Railway Postgres / RDS)
-  ├──▶ Managed Redis (Upstash / Railway Redis / ElastiCache)
+  ├──▶ MongoDB (Atlas, or any replica set — see §2 on why a replica set
+  │     is required, not optional)
   └──▶ Cloudinary, Flutterwave, Paystack, Stripe (external APIs)
 ```
 
-Two independently deployable services, one shared `.env` contract (`.env.example`). Web is Vercel-first (zero-config for Next.js); the API is a plain Node/Express process, deployed as the Docker image built by `apps/api/Dockerfile` to whichever platform runs containers.
-
 ## 2. Environment variables
 
-Full list and defaults: [`.env.example`](../.env.example). Split by which service actually reads each one:
+Full list and defaults: [`.env.example`](../.env.example). Set these in the Vercel project's Environment Variables (Production/Preview/Development) and, for local dev, in `apps/web/.env.local`.
 
-| Variable | Read by | Notes |
-|---|---|---|
-| `NODE_ENV` | both | `production` in every deployed environment |
-| `APP_URL` | api | The web app's public URL — used for the API's CORS allow-list |
-| `API_URL` | web (build **and** runtime) | The API's public URL — baked into the Next rewrite at build time, so a change requires a redeploy, not just an env var update |
-| `PORT` | api | Most platforms (Railway, Render, Fly) inject this automatically; `env.ts` defaults to `4000` if unset |
-| `DATABASE_URL` / `REDIS_URL` | api | From the managed Postgres/Redis provider |
-| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | api | Generate fresh 32+ char secrets for production — **never reuse the dev `.env` values** |
-| `CLOUDINARY_*` | api | From the Cloudinary dashboard |
-| `FLUTTERWAVE_*` / `PAYSTACK_*` / `STRIPE_*` | api | Live-mode keys — see §5 for webhook URL registration |
-| `DEFAULT_CURRENCY` / `DEFAULT_LOCALE` | both | `NGN` / `en` at launch, per the PRD |
+| Variable | Notes |
+|---|---|
+| `NODE_ENV` | `production` in every deployed environment |
+| `APP_URL` | The app's own public URL — used to build email links (verification, password reset) and the checkout-confirmation redirect, and as the fallback base `serverApiRequest` uses to call this app's own API routes from Server Components (falls back to Vercel's `VERCEL_URL` automatically if unset, so it's optional on Vercel but should still be set for correct email links) |
+| `MONGODB_URI` / `MONGODB_DB` | Atlas connection string (already a replica set) or a self-managed one |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | Generate fresh 32+ char secrets for production — **never reuse dev values** |
+| `SETUP_SECRET` | Guards `POST /api/v1/setup/admin`, the one-time admin bootstrap endpoint (see §4) |
+| `CLOUDINARY_*` | From the Cloudinary dashboard |
+| `FLUTTERWAVE_*` / `PAYSTACK_*` / `STRIPE_*` | Live-mode keys — see §5 of [PAYMENTS.md](./PAYMENTS.md) for webhook URL registration |
+| `DEFAULT_CURRENCY` / `DEFAULT_LOCALE` | `NGN` / `en` at launch |
 
-The web app has no `NEXT_PUBLIC_*` variables today — every client-side API call goes through the relative `/api/v1` path (`apps/web/src/lib/api-client.ts`) that `next.config.mjs`'s rewrite proxies server-side, so nothing about the API's location needs to reach the browser bundle.
+No `NEXT_PUBLIC_*` API variables exist — every client-side call goes through the relative `/api/v1` path (`apps/web/src/lib/api-client.ts`), which is always same-origin now.
 
-`apps/api/src/config/env.ts` loads `.env` from a path relative to its own compiled location, but only as a **local-dev convenience** — `dotenv.config()` fails silently (not a thrown error) when the file doesn't exist, which is exactly the production case: no `.env` file is ever built into a container image (`.dockerignore` excludes it), and the Zod schema parses whatever the platform already injected into `process.env` instead.
+### MongoDB needs a replica set
 
-## 3. Deploying the API (Render)
+Order placement and a handful of other writes use a Mongoose/MongoDB transaction (atomic stock decrement + order creation, for instance) — transactions require the database to be a replica set, even a single-node one. Atlas is always a replica set regardless of tier, so this is a non-issue there. A plain local `mongod` is **not** one by default; for local dev, either point `MONGODB_URI` at a free Atlas cluster, or run Mongo locally with `--replSet rs0` and initiate it once (`mongosh --eval "rs.initiate()"`). Without this, checkout will fail locally with a transaction-not-supported error.
 
-The concrete path this project uses. `render.yaml` (repo root) is a Render Blueprint that provisions the managed Postgres database and the API's web service together.
-
-1. Render dashboard → New → Blueprint → select this repo → it reads `render.yaml`, provisioning a managed Postgres database and the API web service (built from `apps/api/Dockerfile`, build context = repo root, health check = `/api/v1/health`, JWT secrets auto-generated).
-2. Render's managed Redis product ("Key Value") isn't in the blueprint — its schema field has changed across Render's product history, so create it manually: New → Key Value → copy its connection string into the API service's `REDIS_URL` env var.
-3. Set the remaining `sync: false` variables in the blueprint (`APP_URL`, Cloudinary, payment provider keys) in the API service's Environment tab. `APP_URL` needs the Vercel URL from §4 — can be set to a placeholder and updated after Vercel is live.
-4. Run the production migration once, against the Render Postgres external connection string:
-   ```bash
-   npx prisma migrate deploy --schema=apps/api/prisma/schema.prisma
-   ```
-   Run this from Render's shell/one-off job runner, or locally with `DATABASE_URL` pointed at the production database — never `prisma migrate dev` against production (it can generate and prompt for destructive changes interactively).
-
-Other Dockerfile-based platforms (Railway, Fly.io, a bare VPS) work the same way in principle — point them at `apps/api/Dockerfile` with the repo root as build context (required, since `npm ci` needs every workspace's `package.json` to resolve the shared `package-lock.json`), set the same `api`-scoped variables from the table above, and point their health-check probe at `GET /api/v1/health`.
-
-## 4. Deploying the web app (Vercel)
+## 3. Deploying to Vercel
 
 1. Import the repo into Vercel.
-2. Project settings → **Root Directory**: `apps/web`. Vercel then picks up `apps/web/vercel.json`, which overrides the install/build commands to run from the monorepo root (`cd ../.. && npm ci` / `npm run build:web`) — necessary because `apps/web` alone doesn't have its own lockfile under npm workspaces.
-3. Environment variables → set `API_URL` to the deployed API's public URL (from §3). Set it for all three Vercel environments (Production/Preview/Development) — Preview deployments should point at a staging API if one exists, or the same production API if not (read-heavy pages degrade gracefully; anything that writes should be tested against staging first once one exists).
-4. Deploy. Vercel's Next.js runtime handles SSR/ISR/static assets natively — `apps/web/Dockerfile` is not used here, it exists solely for the self-hosted path in §6.
-5. Attach the production domain, then set the API's `APP_URL` (§3) to that final domain and redeploy the API so CORS reflects the real origin.
+2. Project settings → **Root Directory**: `apps/web`. Vercel then picks up `apps/web/vercel.json`, which runs install/build from the monorepo root (`cd ../.. && npm ci` / `npm run build:web`) — needed because `apps/web` alone doesn't have its own lockfile under npm workspaces.
+3. Set every variable from §2's table, for all three Vercel environments.
+4. Deploy. Vercel's Next.js runtime handles SSR/ISR/static assets and the API route handlers natively — nothing else to configure.
+5. Attach the production domain. No follow-up redeploy is needed for auth to keep working (unlike the old Render setup) — same-origin cookies don't care what the domain is.
+
+## 4. First admin account
+
+There's no shell access on Vercel to run a seed script directly, so admin bootstrap goes through an HTTP endpoint instead, guarded by `SETUP_SECRET`:
+
+```bash
+curl -X POST "https://<your-domain>/api/v1/setup/admin" \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"<SETUP_SECRET value>","email":"admin@example.com","password":"a-strong-password"}'
+```
+
+Idempotent — safe to re-run (it upserts by email). Rotate or unset `SETUP_SECRET` afterward if it's not needed again.
 
 ## 5. Post-deploy checklist
 
 - **Payment webhooks** — register each production webhook URL in the provider's dashboard, per [PAYMENTS.md](./PAYMENTS.md)'s signature table:
-  - Flutterwave: `{API_URL}/api/v1/webhooks/flutterwave`
-  - Paystack: `{API_URL}/api/v1/webhooks/paystack`
-  - Stripe: `{API_URL}/api/v1/webhooks/stripe`
+  - Flutterwave: `{APP_URL}/api/v1/webhooks/flutterwave`
+  - Paystack: `{APP_URL}/api/v1/webhooks/paystack`
+  - Stripe: `{APP_URL}/api/v1/webhooks/stripe`
   Copy each provider's *live-mode* signing secret into the matching env var (`FLUTTERWAVE_WEBHOOK_SECRET_HASH`, `STRIPE_WEBHOOK_SECRET`, etc.) — test-mode and live-mode secrets are different values.
 - **Swap every payment key from test-mode to live-mode** before accepting real transactions — nothing in the codebase enforces this distinction; it's operational discipline.
-- **`GET /api/v1/health`** — point uptime monitoring (even something as simple as a cron'd curl + alert) at this endpoint; it already reports `database`/`redis` sub-status individually.
-- **Footer / branding** — confirm "Powered by Durchex D.A.M Company LTD" renders on the live domain (it's in the shared layout, but worth a real visual check post-deploy, not just trusting the code).
+- **`GET /api/v1/health`** — point uptime monitoring at this endpoint; it reports MongoDB connectivity.
+- **Footer / branding** — confirm "Powered by Durchex D.A.M Company LTD" renders on the live domain.
 
-## 6. Docker / self-hosting path
+## 6. What happened to `apps/api`, Render, Postgres, and Redis
 
-`apps/api/Dockerfile` and `apps/web/Dockerfile` are genuine multi-stage production builds (not dev conveniences) — `docker-compose.prod.yml` runs the full stack (Postgres, Redis, API, web) from them for a single-VPS deployment:
-
-```bash
-cp .env.example .env   # fill in real production secrets
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec api npx prisma migrate deploy
-```
-
-Both Dockerfiles build from the **repo root** as context (`docker build -f apps/api/Dockerfile .`) for the same npm-workspaces reason as Vercel's install command in §4. Neither bakes secrets into the image — `.dockerignore` excludes `.env`, and both `HEALTHCHECK`s reuse the same endpoints as their managed-platform equivalents.
-
-**Honesty note:** no Docker daemon is available in this sandbox (confirmed — `docker --version` returns "command not found" here), so neither Dockerfile has actually been built or run. They were written directly against documented Next.js `output: "standalone"` and Prisma-in-Alpine conventions (openssl + libc6-compat packages, matching build/runtime base images so the generated Prisma query engine binary matches at runtime) rather than verified empirically. Building both images against a real Docker daemon should be the first thing done before relying on this path.
+- **Render + the standalone Express API (`apps/api`)** — decommissioned. The code is still in the repo (untouched, still builds and tests standalone) as a reference during the transition, but nothing deploys it anymore. It can be deleted once the Vercel deployment has been running in production without issues for a while.
+- **PostgreSQL / Prisma** — replaced by MongoDB / Mongoose (`apps/web/src/server/models/**`). There is no migration path for existing production data in this change — if the old Render deployment held real customer/order data, it needs a one-time export/import into MongoDB before cutover, which isn't automated here.
+- **Redis** — dropped outright rather than replaced. It was only ever wired to the health check in the old API; nothing cached through it. Rate limiting, which used to be in-memory per Express process, now uses a small MongoDB-backed counter collection (`apps/web/src/server/http/rateLimit.ts`) instead — a Redis-backed limiter would be a reasonable upgrade later if request volume grows enough to matter, but isn't required.
+- `render.yaml`, the Render-specific deployment blueprint, has been removed. `docker-compose*.yml` and both apps' `Dockerfile`s still describe the old Postgres+Redis+two-service topology and are now stale — left in place but not maintained; delete or rewrite them if a Docker-based deployment path is wanted again.
 
 ## 7. CI
 
-`.github/workflows/ci.yml` runs on every push/PR to `main`: lint + `tsc --noEmit` + `jest` for each app independently (mirroring [TESTING.md](./TESTING.md) — no live database needed, since every test mocks Prisma), then a combined `npm run build` job gated on both passing. It does not deploy anything — Vercel's own GitHub integration (auto-deploy on push once the project is imported, per §4) already covers the web app without needing a custom Actions step, and Render redeploys on push to `main` the same way.
+`.github/workflows/ci.yml`, if still configured for the old two-app split, needs updating to build/typecheck/test only `apps/web` going forward (`npm run build`, `npm run lint`, `npm run test` at the repo root now all resolve to the web app only — see the root `package.json`).
 
 ## 8. Rollback
 
-- **Vercel:** every deployment is immutable and keeps its own URL — use the dashboard's "Promote to Production" on a prior deployment, no rebuild needed.
-- **API:** redeploy the previous image tag/commit on whichever platform is used (Railway/Render both keep deployment history with one-click rollback; a bare Docker host should tag images by commit SHA so `docker run zylix-api:<previous-sha>` is always available).
-- **Database migrations:** `prisma migrate deploy` is forward-only by design. A migration that must be undone needs a new forward migration that reverses the change — never edit or delete an already-applied migration file.
-
-## 9. Cross-origin cookies
-
-Since the frontend (Vercel) and API (Render) are on different domains, the refresh-token cookie is set with `sameSite: "none"` in production (`apps/api/src/controllers/auth.controller.ts`) — required for the browser to send it on a cross-site fetch at all. Paired with `secure: true` (already conditional on `NODE_ENV === "production"`), per the `SameSite=None` spec requirement. Local dev keeps `sameSite: "lax"` since frontend and API are same-site there via the rewrite proxy.
+Every Vercel deployment is immutable and keeps its own URL — use the dashboard's "Promote to Production" on a prior deployment, no rebuild needed. There's no separate API to roll back independently anymore.

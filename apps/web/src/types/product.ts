@@ -45,7 +45,6 @@ export interface ProductDetail extends ProductSummary {
   images: ProductImage[];
   variants: ProductVariant[];
   attributes: ProductAttribute[];
-  seller: { id: string; storeName: string; storeSlug: string };
   seoTitle: string | null;
   seoDescription: string | null;
 }

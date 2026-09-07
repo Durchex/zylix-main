@@ -26,7 +26,7 @@ const FAQ_ITEMS: AccordionItemData[] = [
   {
     question: "Are the products on ZylixStore genuine?",
     answer:
-      "Yes. Every product sold on ZylixStore — whether from Durchex D.A.M directly or an approved third-party seller — goes through our catalog verification process before it can be listed.",
+      "Yes. Every product sold on ZylixStore goes through our catalog verification process before it can be listed.",
   },
   {
     question: "How do I track my order?",

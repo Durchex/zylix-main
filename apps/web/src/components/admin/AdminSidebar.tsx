@@ -28,13 +28,6 @@ const NAV_SECTIONS: Array<{ title: string; links: Array<{ label: string; href: s
     links: [{ label: "Shipping Zones", href: "/admin/shipping" }],
   },
   {
-    title: "Sellers",
-    links: [
-      { label: "All Sellers", href: "/admin/sellers" },
-      { label: "Applications", href: "/admin/sellers/applications" },
-    ],
-  },
-  {
     title: "People",
     links: [{ label: "Users", href: "/admin/users" }],
   },

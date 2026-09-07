@@ -6,16 +6,57 @@ on:
   pull_request:
     branches: [main]
 
-# Tests in both apps run entirely against a mocked Prisma client (see
-# docs/TESTING.md) — no Postgres/Redis service containers are needed here.
+# apps/web's tests run entirely against a mocked Mongoose model layer — no
+# live MongoDB is needed here. The env vars below are only what
+# apps/web/src/server/config/env.ts requires to parse successfully; no real
+# secrets are used in CI, and nothing here talks to a live database or
+# payment provider.
+env:
+  MONGODB_URI: mongodb://ci:ci@localhost:27017/ci
+  JWT_ACCESS_SECRET: ci-access-secret-at-least-32-characters-long
+  JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters-long
+  APP_URL: http://localhost:3000
+
 jobs:
-  api:
-    name: API — lint, typecheck, test
+  web:
+    name: Web — lint, typecheck, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint:web
+      # The full apps/web typecheck (frontend + the ported Mongoose/Next.js
+      # API layer together) is heavy enough to OOM well below the default
+      # heap on some environments — bump it explicitly rather than let a
+      # runner-dependent default decide.
+      - run: NODE_OPTIONS=--max-old-space-size=6144 npm --prefix apps/web run typecheck
+      - run: npm run test:web
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    needs: [web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  # apps/api (Express + Prisma/Postgres) is decommissioned — see
+  # docs/DEPLOYMENT.md §6 — but its own lint/typecheck/test still run
+  # standalone here since the code is still in the repo for reference.
+  # Delete this job when apps/api itself is deleted.
+  legacy-api:
+    name: Legacy API (apps/api) — lint, typecheck, test
     runs-on: ubuntu-latest
     env:
-      # Only what apps/api/src/config/env.ts requires to parse successfully.
-      # Real secrets are never used in CI — nothing here talks to a live DB,
-      # Redis instance, or payment provider.
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       REDIS_URL: redis://localhost:6379
       JWT_ACCESS_SECRET: ci-access-secret-at-least-32-characters-long
@@ -30,36 +71,3 @@ jobs:
       - run: npm run lint:api
       - run: npm --prefix apps/api run typecheck
       - run: npm run test:api
-
-  web:
-    name: Web — lint, typecheck, test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npm run lint:web
-      - run: npm --prefix apps/web run typecheck
-      - run: npm run test:web
-
-  build:
-    name: Production build
-    runs-on: ubuntu-latest
-    needs: [api, web]
-    env:
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      REDIS_URL: redis://localhost:6379
-      JWT_ACCESS_SECRET: ci-access-secret-at-least-32-characters-long
-      JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters-long
-      API_URL: http://localhost:4000
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npm run build

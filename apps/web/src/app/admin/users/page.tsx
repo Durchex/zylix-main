@@ -67,7 +67,6 @@ export default function AdminUsersPage() {
         <Select value={role} onChange={(e) => setRole(e.target.value)} className="max-w-xs">
           <option value="">All roles</option>
           <option value="CUSTOMER">Customer</option>
-          <option value="SELLER">Seller</option>
           <option value="ADMIN">Admin</option>
         </Select>
       </div>

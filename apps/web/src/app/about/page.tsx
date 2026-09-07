@@ -43,9 +43,8 @@ export default function AboutPage() {
         </p>
         <p>
           We&rsquo;re powered by <strong className="text-ink-900 dark:text-neutral-100">Durchex D.A.M Company LTD</strong>,
-          which operates ZylixStore directly and — as the marketplace grows — will open the platform to
-          approved third-party sellers, all held to the same standards for authenticity, pricing
-          transparency, and fast delivery.
+          which sources and sells every product on ZylixStore directly, held to the same standards for
+          authenticity, pricing transparency, and fast delivery across our whole catalog.
         </p>
         <p>
           Every order on ZylixStore is backed by secure, Africa-first payment options (Flutterwave and

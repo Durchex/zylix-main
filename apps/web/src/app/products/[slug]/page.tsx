@@ -142,9 +142,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
           )}
 
           <div className="mt-6 border-t border-neutral-200 pt-6 text-sm text-neutral-500 dark:border-surface-800 dark:text-neutral-400">
-            Sold by{" "}
-            <Link href={`/brands/${product.seller.storeSlug}`} className="font-medium text-brand-600 dark:text-accent-400">
-              {product.seller.storeName}
+            Brand{" "}
+            <Link
+              href={`/brands/${encodeURIComponent(product.brand)}`}
+              className="font-medium text-brand-600 dark:text-accent-400"
+            >
+              {product.brand}
             </Link>
           </div>
         </div>

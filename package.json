@@ -7,26 +7,24 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n web,api -c blue,green \"npm:dev:web\" \"npm:dev:api\"",
+    "dev": "npm run dev:web",
     "dev:web": "npm run --workspace=@zylix/web dev",
-    "dev:api": "npm run --workspace=@zylix/api dev",
-    "build": "npm run build:api && npm run build:web",
+    "build": "npm run build:web",
     "build:web": "npm run --workspace=@zylix/web build",
-    "build:api": "npm run --workspace=@zylix/api build",
     "start:web": "npm run --workspace=@zylix/web start",
-    "start:api": "npm run --workspace=@zylix/api start",
-    "lint": "npm run lint:web && npm run lint:api",
+    "lint": "npm run lint:web",
     "lint:web": "npm run --workspace=@zylix/web lint",
-    "lint:api": "npm run --workspace=@zylix/api lint",
-    "test": "npm run test:web && npm run test:api",
+    "test": "npm run test:web",
     "test:web": "npm run --workspace=@zylix/web test",
+    "postinstall": "node scripts/postinstall.js",
+    "_comment_legacy_api": "apps/api (Express + Prisma/Postgres, deployed on Render) is being decommissioned in favor of route handlers inside apps/web on Mongoose/MongoDB + Vercel. Its own scripts still work directly (npm run --workspace=@zylix/api <script>) until it's removed.",
+    "dev:api": "npm run --workspace=@zylix/api dev",
+    "build:api": "npm run --workspace=@zylix/api build",
+    "start:api": "npm run --workspace=@zylix/api start",
+    "lint:api": "npm run --workspace=@zylix/api lint",
     "test:api": "npm run --workspace=@zylix/api test",
     "prisma:generate": "npm run --workspace=@zylix/api prisma:generate",
-    "prisma:migrate": "npm run --workspace=@zylix/api prisma:migrate",
-    "postinstall": "node scripts/postinstall.js"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
+    "prisma:migrate": "npm run --workspace=@zylix/api prisma:migrate"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -1,12 +1,11 @@
 import { create } from "zustand";
 import type { AuthUser } from "@/types/user";
 
-// A non-sensitive "am I logged in" marker, set on the frontend's own domain
-// so proxy.ts (edge middleware, runs on this domain) can read it. The real
-// refresh token lives in an httpOnly cookie scoped to the API's domain,
-// which is invisible to this domain's server-side code when the frontend
-// and API are deployed separately (e.g. Vercel + Render) — cookies don't
-// cross domains regardless of sameSite/secure settings.
+// A non-sensitive "am I logged in" marker, readable by client JS (unlike the
+// real httpOnly `zylix_rt` refresh cookie) so this store can restore
+// `status` on page load before the silent refresh call resolves, and so
+// proxy.ts's edge check has something to look for without needing to verify
+// a JWT at the edge.
 const SESSION_MARKER_COOKIE = "zylix_session";
 const SESSION_MARKER_MAX_AGE_S = 30 * 24 * 60 * 60; // matches the refresh token's lifetime
 

@@ -49,7 +49,7 @@ const PAYMENT_BADGES = ["Flutterwave", "Paystack", "Stripe", "PayPal", "Apple Pa
 
 export function Footer() {
   const pathname = usePathname();
-  const isDashboardShell = pathname.startsWith("/admin") || pathname.startsWith("/seller");
+  const isDashboardShell = pathname.startsWith("/admin");
   if (isDashboardShell) return null;
 
   return (

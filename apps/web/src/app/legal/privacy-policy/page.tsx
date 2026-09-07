@@ -38,9 +38,8 @@ export default function PrivacyPolicyPage() {
 
       <h2>Sharing your information</h2>
       <p>
-        We share data with payment providers (to process transactions), delivery partners (to
-        fulfil orders), and sellers on our marketplace (limited to what&rsquo;s needed to fulfil
-        an order placed with them). We do not sell your personal data to third parties.
+        We share data with payment providers (to process transactions) and delivery partners (to
+        fulfil orders). We do not sell your personal data to third parties.
       </p>
 
       <h2>Your rights</h2>

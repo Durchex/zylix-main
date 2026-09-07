@@ -17,7 +17,6 @@ import { apiRequest, ApiRequestError } from "@/lib/api-client";
 import { adminProductsApi } from "@/lib/api/admin";
 import type { AdminProduct } from "@/types/admin";
 import type { CategorySummary } from "@/types/product";
-import type { SellerSummary } from "@/types/seller";
 
 const productFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
@@ -28,7 +27,6 @@ const productFormSchema = z.object({
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens only"),
   brand: z.string().trim().min(1, "Brand is required"),
   categoryId: z.string().min(1, "Category is required"),
-  sellerId: z.string().min(1, "Seller is required"),
   sku: z.string().trim().min(1, "SKU is required"),
   description: z.string().trim().min(1, "Description is required"),
   basePrice: z.coerce.number().positive("Price must be greater than 0"),
@@ -56,7 +54,6 @@ const defaultValues: ProductFormValues = {
   slug: "",
   brand: "",
   categoryId: "",
-  sellerId: "",
   sku: "",
   description: "",
   basePrice: 0,
@@ -74,7 +71,6 @@ function toFormValues(product: AdminProduct): ProductFormValues {
     slug: product.slug,
     brand: product.brand,
     categoryId: product.category.id,
-    sellerId: product.seller.id,
     sku: product.sku,
     description: product.description,
     basePrice: Number(product.basePrice),
@@ -97,7 +93,6 @@ function toFormValues(product: AdminProduct): ProductFormValues {
 export function ProductForm({ productId }: { productId?: string }) {
   const router = useRouter();
   const [categories, setCategories] = useState<CategorySummary[]>([]);
-  const [sellers, setSellers] = useState<SellerSummary[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -118,14 +113,8 @@ export function ProductForm({ productId }: { productId?: string }) {
   const variantFields = useFieldArray({ control, name: "variants" });
 
   useEffect(() => {
-    Promise.all([
-      apiRequest<{ categories: CategorySummary[] }>("/categories"),
-      apiRequest<{ sellers: SellerSummary[] }>("/sellers"),
-    ])
-      .then(([categoryRes, sellerRes]) => {
-        setCategories(categoryRes.categories);
-        setSellers(sellerRes.sellers);
-      })
+    apiRequest<{ categories: CategorySummary[] }>("/categories")
+      .then((categoryRes) => setCategories(categoryRes.categories))
       .catch((err) => setLoadError(err instanceof ApiRequestError ? err.message : "Something went wrong."));
 
     if (productId) {
@@ -174,14 +163,6 @@ export function ProductForm({ productId }: { productId?: string }) {
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
-                </option>
-              ))}
-            </Select>
-            <Select label="Seller" error={errors.sellerId?.message} {...register("sellerId")}>
-              <option value="">Select seller</option>
-              {sellers.map((seller) => (
-                <option key={seller.id} value={seller.id}>
-                  {seller.storeName}
                 </option>
               ))}
             </Select>
