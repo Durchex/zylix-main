@@ -134,10 +134,10 @@ export function Header() {
             </svg>
           </IconButton>
           <Link
-            href={user ? "/account" : "/auth/login"}
+            href={user ? (user.role === "ADMIN" ? "/admin" : "/account") : "/auth/login"}
             className="ml-1 hidden rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-ink-900 hover:bg-neutral-50 dark:border-surface-700 dark:text-neutral-100 dark:hover:bg-surface-800 sm:block"
           >
-            {user ? user.firstName : "Log in"}
+            {user ? (user.role === "ADMIN" ? "Admin Dashboard" : user.firstName) : "Log in"}
           </Link>
         </div>
       </div>
@@ -158,8 +158,11 @@ export function Header() {
               </Link>
             </li>
             <li>
-              <Link href={user ? "/account" : "/auth/login"} onClick={() => setMobileMenuOpen(false)}>
-                {user ? "My Account" : "Log in"}
+              <Link
+                href={user ? (user.role === "ADMIN" ? "/admin" : "/account") : "/auth/login"}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {user ? (user.role === "ADMIN" ? "Admin Dashboard" : "My Account") : "Log in"}
               </Link>
             </li>
           </ul>

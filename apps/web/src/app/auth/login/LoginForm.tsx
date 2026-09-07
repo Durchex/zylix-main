@@ -49,7 +49,8 @@ export function LoginForm() {
       }
 
       setSession(result.user, result.accessToken);
-      router.replace(searchParams.get("next") ?? "/");
+      const fallback = result.user.role === "ADMIN" ? "/admin" : "/";
+      router.replace(searchParams.get("next") ?? fallback);
     } catch (err) {
       setSubmitError(err instanceof ApiRequestError ? err.message : "Something went wrong.");
     }
