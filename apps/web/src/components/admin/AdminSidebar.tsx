@@ -17,6 +17,7 @@ const NAV_SECTIONS: Array<{ title: string; links: Array<{ label: string; href: s
       { label: "Products", href: "/admin/catalog/products" },
       { label: "Bulk Add Products", href: "/admin/catalog/products/bulk" },
       { label: "Categories", href: "/admin/catalog/categories" },
+      { label: "Brands", href: "/admin/catalog/brands" },
     ],
   },
   {

@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/Label";
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
+  /** Guidance shown under the control; suppressed while an error is showing. */
+  helperText?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, id, children, ...props }, ref) => {
+  ({ className, label, error, helperText, id, children, ...props }, ref) => {
     const generatedId = useId();
     const selectId = id ?? generatedId;
 
@@ -30,7 +32,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         >
           {children}
         </select>
-        {error && <p className="mt-1.5 text-sm text-error">{error}</p>}
+        {error ? (
+          <p className="mt-1.5 text-sm text-error">{error}</p>
+        ) : (
+          helperText && (
+            <p className="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">{helperText}</p>
+          )
+        )}
       </div>
     );
   },

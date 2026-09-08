@@ -17,6 +17,13 @@ import { apiRequest, ApiRequestError } from "@/lib/api-client";
 import { adminProductsApi } from "@/lib/api/admin";
 import type { CategorySummary } from "@/types/product";
 
+/** Shape of GET /brands — the admin-managed brand list. */
+interface BrandOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 const rowSchema = z.object({
   name: z.string().trim().min(1, "Required"),
   brand: z.string().trim().min(1, "Required"),
@@ -56,6 +63,7 @@ function slugify(name: string) {
 export default function BulkAddProductsPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<{ succeededCount: number; failed: Array<{ name: string; error: string }> } | null>(null);
@@ -75,8 +83,14 @@ export default function BulkAddProductsPage() {
   const { fields, append, remove } = useFieldArray({ control, name: "rows" });
 
   useEffect(() => {
-    apiRequest<{ categories: CategorySummary[] }>("/categories")
-      .then((categoryRes) => setCategories(categoryRes.categories))
+    Promise.all([
+      apiRequest<{ categories: CategorySummary[] }>("/categories"),
+      apiRequest<{ brands: BrandOption[] }>("/brands"),
+    ])
+      .then(([categoryRes, brandRes]) => {
+        setCategories(categoryRes.categories);
+        setBrands(brandRes.brands);
+      })
       .catch((err) => setLoadError(err instanceof ApiRequestError ? err.message : "Something went wrong."));
   }, []);
 
@@ -167,11 +181,20 @@ export default function BulkAddProductsPage() {
                   error={errors.rows?.[index]?.name?.message}
                   {...register(`rows.${index}.name`)}
                 />
-                <Input
+                <Select
                   label="Brand"
                   error={errors.rows?.[index]?.brand?.message}
                   {...register(`rows.${index}.brand`)}
-                />
+                >
+                  <option value="">Select brand</option>
+                  {brands.map((brand) => (
+                    // Value is the name, not the id — products store the
+                    // brand name (see the Brand model comment).
+                    <option key={brand.id} value={brand.name}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Select

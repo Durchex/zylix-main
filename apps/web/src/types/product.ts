@@ -55,6 +55,8 @@ export interface CategorySummary {
   name: string;
   imageUrl: string | null;
   parentId: string | null;
+  /** Active products in this category — used for listing filter counts. */
+  productCount?: number;
 }
 
 export interface PaginatedResult<T> {

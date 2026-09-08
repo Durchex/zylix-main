@@ -51,6 +51,17 @@ export interface AdminCategory {
   _count: { products: number };
 }
 
+export interface AdminBrand {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  _count: { products: number };
+}
+
 export type OrderStatus =
   | "PENDING"
   | "PAID"

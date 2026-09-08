@@ -74,7 +74,77 @@ export const AUTHENTICITY_TRUST_FEATURES: TrustFeature[] = [
   },
 ];
 
-export function TrustBadges({ features = DEFAULT_TRUST_FEATURES }: { features?: TrustFeature[] }) {
+const SUPPORT_ICON = (
+  <path
+    d="M10 2a6 6 0 00-6 6v3a2 2 0 002 2h1V8H5.2A4.8 4.8 0 0110 3.5 4.8 4.8 0 0114.8 8H13v5h1a2 2 0 002-2V8a6 6 0 00-6-6zm3 12v.5a1.5 1.5 0 01-1.5 1.5H10v1.2h1.5A2.7 2.7 0 0014.2 14H13z"
+    fill="currentColor"
+  />
+);
+
+/** The five-point "Why Choose ZylixStore?" row on the home page. */
+export const WHY_CHOOSE_FEATURES: TrustFeature[] = [
+  {
+    title: "100% Original Products",
+    description: "Genuine brands, no fakes.",
+    icon: WARRANTY_ICON,
+  },
+  {
+    title: "Fast Nationwide Delivery",
+    description: "From Lagos to your doorstep.",
+    icon: DELIVERY_ICON,
+  },
+  {
+    title: "Secure Payments",
+    description: "Multiple payment options.",
+    icon: SECURE_PAYMENT_ICON,
+  },
+  {
+    title: "Easy Returns",
+    description: "Hassle-free within 7 days.",
+    icon: RETURNS_ICON,
+  },
+  {
+    title: "Dedicated Support",
+    description: "We're here to help.",
+    icon: SUPPORT_ICON,
+  },
+];
+
+export function TrustBadges({
+  features = DEFAULT_TRUST_FEATURES,
+  title,
+  /** "row" stacks the icon above centred text, matching the home page band. */
+  layout = "card",
+}: {
+  features?: TrustFeature[];
+  title?: string;
+  layout?: "card" | "row";
+}) {
+  if (layout === "row") {
+    return (
+      <section className="py-10">
+        {title && (
+          <h2 className="mb-6 text-xl font-bold tracking-tight text-ink-900 dark:text-neutral-50 sm:text-2xl">
+            {title}
+          </h2>
+        )}
+        <div className="grid grid-cols-2 gap-4 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-surface-800 dark:bg-surface-900 sm:grid-cols-3 lg:grid-cols-5">
+          {features.map((feature) => (
+            <div key={feature.title} className="flex flex-col items-center gap-2 text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-accent-400">
+                <svg viewBox="0 0 20 20" className="h-6 w-6">
+                  {feature.icon}
+                </svg>
+              </span>
+              <h3 className="text-sm font-semibold text-ink-900 dark:text-neutral-50">{feature.title}</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="border-t border-neutral-200 py-8 dark:border-surface-800">
       <div className="grid gap-4 sm:grid-cols-3">

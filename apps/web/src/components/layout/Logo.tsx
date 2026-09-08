@@ -1,46 +1,64 @@
 import { cn } from "@/lib/utils";
 
+/**
+ * The "Z" tile — a blue rounded square with a stylised Z cut through it.
+ * Kept as a standalone export so compact surfaces (favicon route, mobile
+ * headers) can use the mark without the wordmark.
+ */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M3 4h2l1.6 9.6a1.5 1.5 0 001.5 1.4h6.4a1.5 1.5 0 001.5-1.3L17 7H5.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8.3 8.1h4.9l-4.9 4h4.9"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="8" cy="17" r="1" fill="currentColor" />
-      <circle cx="14.5" cy="17" r="1" fill="currentColor" />
-    </svg>
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white",
+        className,
+      )}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 24 24" fill="none" className="h-[60%] w-[60%]">
+        <path
+          d="M7 6h10L8 18h10"
+          stroke="currentColor"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 
 export function Logo({
   className,
   tone = "dark",
+  showTagline = true,
 }: {
   className?: string;
   tone?: "dark" | "light";
+  /** Hidden on tight surfaces (mobile header, footer columns). */
+  showTagline?: boolean;
 }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5", className)}>
-      <LogoMark className="h-6 w-6 shrink-0 text-cta-500" />
-      <span
-        className={cn(
-          "inline-flex items-baseline text-xl font-bold tracking-tight",
-          tone === "dark" ? "text-ink-900 dark:text-white" : "text-white",
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <LogoMark className="h-9 w-9" />
+      <span className="inline-flex flex-col leading-none">
+        <span
+          className={cn(
+            "text-xl font-bold tracking-tight",
+            tone === "dark" ? "text-ink-900 dark:text-white" : "text-white",
+          )}
+        >
+          ZylixStore
+        </span>
+        {showTagline && (
+          <span
+            className={cn(
+              "mt-0.5 text-[10px] font-medium tracking-tight",
+              tone === "dark" ? "text-neutral-500 dark:text-neutral-400" : "text-white/70",
+            )}
+          >
+            Electronics. Better Living.
+          </span>
         )}
-      >
-        ZylixStore
-        <sup className="ml-0.5 -translate-y-1 text-[9px] font-semibold text-neutral-400">&reg;</sup>
       </span>
     </span>
   );

@@ -6,12 +6,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Dense-catalog identity (B&H Photo-style) — replaced the premium
-        // gradient blue. "brand" is now a classic web-link blue used for
-        // nav/links/accents; "cta" is the high-contrast orange used
-        // specifically for purchase actions (Add to Cart / Buy Now),
-        // matching the utilitarian professional-catalog convention rather
-        // than the earlier glassmorphism/gradient identity.
+        // Blue-forward storefront identity. "brand" is the primary blue used
+        // for nav, links, primary buttons and Add to Cart alike — the
+        // reference design uses one blue for every primary action rather
+        // than reserving a separate CTA color. "cta" (orange) is kept
+        // defined for any surface that still wants a contrasting accent,
+        // but is no longer the purchase-action color.
         brand: {
           50: "#EFF6FF",
           100: "#DBEAFE",
@@ -92,6 +92,16 @@ const config: Config = {
           800: "#2C2C30",
           900: "#1A1A1C",
         },
+        // The red reserved for urgency/promotion only — the "Deals" nav
+        // pill and limited-time banners. Deliberately not reused for
+        // destructive UI, which keeps using `error`.
+        deal: {
+          50: "#FEF2F2",
+          100: "#FEE2E2",
+          500: "#EF4444",
+          600: "#DC2626",
+          700: "#B91C1C",
+        },
         success: { DEFAULT: "#1E9E62", subtle: "#E6F6ED" },
         warning: { DEFAULT: "#D9992A", subtle: "#FBF1DF" },
         error: { DEFAULT: "#DC3545", subtle: "#FBE7E9" },
@@ -108,11 +118,13 @@ const config: Config = {
           "sans-serif",
         ],
       },
-      // Dense catalog sites use minimal/sharp corners, not the rounded
-      // "premium app" look — 2xl used to be 1.25rem, now a modest 0.375rem.
+      // Rounded corners matching the storefront reference design — cards,
+      // buttons and banners all read as soft-cornered rather than the
+      // sharp-cornered "dense catalog" look this previously targeted.
       borderRadius: {
-        xl: "0.25rem",
-        "2xl": "0.375rem",
+        xl: "0.75rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
       },
       boxShadow: {
         soft: "0 1px 2px rgba(0, 0, 0, 0.06)",

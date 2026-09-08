@@ -18,6 +18,13 @@ import { adminProductsApi } from "@/lib/api/admin";
 import type { AdminProduct } from "@/types/admin";
 import type { CategorySummary } from "@/types/product";
 
+/** Shape of GET /brands — the admin-managed brand list. */
+interface BrandOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 const productFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   slug: z
@@ -93,6 +100,7 @@ function toFormValues(product: AdminProduct): ProductFormValues {
 export function ProductForm({ productId }: { productId?: string }) {
   const router = useRouter();
   const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [brands, setBrands] = useState<BrandOption[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -113,8 +121,14 @@ export function ProductForm({ productId }: { productId?: string }) {
   const variantFields = useFieldArray({ control, name: "variants" });
 
   useEffect(() => {
-    apiRequest<{ categories: CategorySummary[] }>("/categories")
-      .then((categoryRes) => setCategories(categoryRes.categories))
+    Promise.all([
+      apiRequest<{ categories: CategorySummary[] }>("/categories"),
+      apiRequest<{ brands: BrandOption[] }>("/brands"),
+    ])
+      .then(([categoryRes, brandRes]) => {
+        setCategories(categoryRes.categories);
+        setBrands(brandRes.brands);
+      })
       .catch((err) => setLoadError(err instanceof ApiRequestError ? err.message : "Something went wrong."));
 
     if (productId) {
@@ -154,7 +168,25 @@ export function ProductForm({ productId }: { productId?: string }) {
             <Input label="Slug" error={errors.slug?.message} {...register("slug")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Brand" error={errors.brand?.message} {...register("brand")} />
+            <div>
+              <Select
+                label="Brand"
+                error={errors.brand?.message}
+                helperText={
+                  brands.length === 0 ? "No brands yet — add one under Catalog → Brands." : undefined
+                }
+                {...register("brand")}
+              >
+                <option value="">Select brand</option>
+                {brands.map((brand) => (
+                  // Products store the brand name, not an id — see the Brand
+                  // model comment on why this stays denormalised.
+                  <option key={brand.id} value={brand.name}>
+                    {brand.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
             <Input label="SKU" error={errors.sku?.message} {...register("sku")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

@@ -218,14 +218,43 @@ export const productService = {
     }
 
     if (query.brand) {
-      filter.brand = equalsInsensitive(query.brand);
+      // Comma-separated means "any of these" — the listing sidebar lets
+      // several brands be checked at once. A single value still resolves to
+      // the same case-insensitive exact match as before.
+      const brands = query.brand
+        .split(",")
+        .map((name) => name.trim())
+        .filter(Boolean);
+      if (brands.length === 0) return paginate([], 0, query);
+      filter.brand =
+        brands.length === 1 ? equalsInsensitive(brands[0]!) : { $in: brands.map(equalsInsensitive) };
     }
     if (query.featured) {
       filter.isFeatured = true;
     }
+    // Availability and search each need their own $or, and a single filter
+    // object can only hold one — so both go into $and, which composes.
+    const andClauses: FilterQuery<ProductDoc>[] = [];
+
+    if (query.availability) {
+      // Stock lives on the variant when a product has variants and on the
+      // product otherwise, so "in stock" is either-or rather than a single
+      // field comparison.
+      const inStockVariantProductIds = await ProductVariant.distinct("productId", {
+        stockQuantity: { $gt: 0 },
+      });
+      andClauses.push(
+        query.availability === "in"
+          ? { $or: [{ stockQuantity: { $gt: 0 } }, { _id: { $in: inStockVariantProductIds } }] }
+          : { stockQuantity: { $lte: 0 }, _id: { $nin: inStockVariantProductIds } },
+      );
+    }
     if (query.search) {
       const pattern = containsInsensitive(query.search);
-      filter.$or = [{ name: pattern }, { brand: pattern }, { description: pattern }];
+      andClauses.push({ $or: [{ name: pattern }, { brand: pattern }, { description: pattern }] });
+    }
+    if (andClauses.length > 0) {
+      filter.$and = andClauses;
     }
     if (query.minPrice !== undefined || query.maxPrice !== undefined) {
       filter.basePrice = {

@@ -33,13 +33,28 @@ export function ProductGridEmpty({ message = "No products found." }: { message?:
   );
 }
 
-export function ProductGrid({ products }: { products: ProductSummary[] }) {
+/**
+ * Widest column count the grid steps up to. Listing pages use 4; the home
+ * page's featured rail fits 5 across since it has no filter sidebar.
+ */
+const GRID_COLUMNS = {
+  4: "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4",
+  5: "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
+} as const;
+
+export function ProductGrid({
+  products,
+  columns = 4,
+}: {
+  products: ProductSummary[];
+  columns?: keyof typeof GRID_COLUMNS;
+}) {
   if (products.length === 0) {
     return <ProductGridEmpty />;
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className={`grid ${GRID_COLUMNS[columns]}`}>
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

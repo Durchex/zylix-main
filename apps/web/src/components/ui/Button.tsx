@@ -8,11 +8,10 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // High-contrast orange for purchase actions (Add to Cart, Buy Now,
-        // Place order) — matches the dense-catalog convention where the CTA
-        // color is deliberately distinct from the nav/link blue, not a
-        // decorative gradient.
-        primary: "bg-cta-600 text-white hover:bg-cta-700",
+        // One blue for every primary action — nav, Add to Cart, Buy Now,
+        // Place order. The storefront design uses a single primary color
+        // rather than reserving a separate contrasting CTA color.
+        primary: "bg-brand-600 text-white hover:bg-brand-700",
         secondary: "bg-ink-900 text-white hover:bg-ink-800 dark:bg-surface-800 dark:hover:bg-surface-700",
         outline:
           "border border-neutral-300 bg-white text-ink-900 hover:bg-neutral-50 dark:border-surface-700 dark:bg-transparent dark:text-neutral-100 dark:hover:bg-surface-800",

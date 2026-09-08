@@ -4,12 +4,19 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { FilterSidebar } from "@/components/storefront/FilterSidebar";
 import { ProductGrid, ProductGridEmpty } from "@/components/storefront/ProductGrid";
+import { Pagination } from "@/components/storefront/Pagination";
+import { ListingToolbar } from "@/components/storefront/ListingToolbar";
 import { ProductRail } from "@/components/storefront/ProductRail";
 import { RecentlyViewedSection } from "@/components/storefront/RecentlyViewedSection";
 import { ExpressDeliveryCTA } from "@/components/shop/ExpressDeliveryCTA";
 import { TrustBadges, AUTHENTICITY_TRUST_FEATURES } from "@/components/home/TrustBadges";
 import { serverApiRequest } from "@/lib/server-api";
 import type { PaginatedResult, ProductSummary } from "@/types/product";
+
+const PAGE_SIZE = 24;
+
+/** Filters forwarded to the API and preserved across pagination. */
+const FILTER_KEYS = ["sort", "featured", "brand", "minPrice", "maxPrice", "availability"] as const;
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -37,20 +44,38 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const search = await searchParams;
   const title = categoryTitle(category);
 
+  const page = Math.max(1, Number(search.page) || 1);
+
   const query = new URLSearchParams();
   query.set("category", category);
-  if (search.sort) query.set("sort", search.sort);
-  if (search.featured) query.set("featured", search.featured);
-  if (search.brand) query.set("brand", search.brand);
-  if (search.minPrice) query.set("minPrice", search.minPrice);
-  if (search.maxPrice) query.set("maxPrice", search.maxPrice);
-  query.set("pageSize", "24");
+  for (const key of FILTER_KEYS) {
+    const value = search[key];
+    if (value) query.set(key, value);
+  }
+  query.set("page", String(page));
+  query.set("pageSize", String(PAGE_SIZE));
 
   const result = await serverApiRequest<PaginatedResult<ProductSummary>>(
     `/products?${query.toString()}`,
     { tags: ["products", `category:${category}`] },
   );
   const products = result?.items ?? [];
+  const total = result?.total ?? 0;
+  const totalPages = result?.totalPages ?? 1;
+
+  function buildHref(targetPage: number) {
+    const next = new URLSearchParams();
+    for (const key of FILTER_KEYS) {
+      const value = search[key];
+      if (value) next.set(key, value);
+    }
+    if (targetPage > 1) next.set("page", String(targetPage));
+    const queryString = next.toString();
+    return queryString ? `/shop/${category}?${queryString}` : `/shop/${category}`;
+  }
+
+  const firstOnPage = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastOnPage = Math.min(page * PAGE_SIZE, total);
 
   return (
     <Container className="py-10">
@@ -77,12 +102,20 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <Suspense>
           <FilterSidebar activeCategory={category} />
         </Suspense>
-        <div className="flex-1">
-          {products.length > 0 ? (
-            <ProductGrid products={products} />
-          ) : (
-            <ProductGridEmpty message="No products in this category yet — check back soon." />
-          )}
+        <div className="min-w-0 flex-1">
+          <Suspense>
+            <ListingToolbar first={firstOnPage} last={lastOnPage} total={total} />
+          </Suspense>
+
+          <div className="mt-5">
+            {products.length > 0 ? (
+              <ProductGrid products={products} />
+            ) : (
+              <ProductGridEmpty message="No products in this category yet — check back soon." />
+            )}
+          </div>
+
+          <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />
         </div>
       </div>
 

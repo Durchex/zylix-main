@@ -8,12 +8,14 @@ import { Select } from "@/components/ui/Select";
 import { PriceTag } from "@/components/ui/PriceTag";
 import { useCartStore } from "@/store/cart.store";
 import { useWishlistStore } from "@/store/wishlist.store";
+import { useCartDrawer } from "@/components/cart/CartDrawerProvider";
 import { cn } from "@/lib/utils";
 import type { ProductDetail } from "@/types/product";
 
 export function AddToCartPanel({ product }: { product: ProductDetail }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
+  const openCartDrawer = useCartDrawer();
   const wishlisted = useWishlistStore((s) => s.has(product.id));
   const toggleWishlist = useWishlistStore((s) => s.toggle);
 
@@ -36,7 +38,7 @@ export function AddToCartPanel({ product }: { product: ProductDetail }) {
   const stock = activeVariant ? activeVariant.stockQuantity : product.stockQuantity;
   const inStock = stock > 0;
 
-  function handleAddToCart() {
+  function handleAddToCart({ openDrawer = true }: { openDrawer?: boolean } = {}) {
     addItem({
       productId: product.id,
       variantId: activeVariant?.id ?? null,
@@ -50,6 +52,9 @@ export function AddToCartPanel({ product }: { product: ProductDetail }) {
     });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
+    // "Buy now" navigates straight to checkout, so the drawer would only
+    // flash open behind the transition.
+    if (openDrawer) openCartDrawer();
   }
 
   async function handleShare() {
@@ -112,7 +117,7 @@ export function AddToCartPanel({ product }: { product: ProductDetail }) {
       </div>
 
       <div className="flex gap-3">
-        <Button className="relative flex-1 overflow-hidden" disabled={!inStock} onClick={handleAddToCart}>
+        <Button className="relative flex-1 overflow-hidden" disabled={!inStock} onClick={() => handleAddToCart()}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
               key={justAdded ? "added" : "idle"}
@@ -139,8 +144,8 @@ export function AddToCartPanel({ product }: { product: ProductDetail }) {
           variant="outline"
           disabled={!inStock}
           onClick={() => {
-            handleAddToCart();
-            router.push("/cart");
+            handleAddToCart({ openDrawer: false });
+            router.push("/checkout");
           }}
         >
           Buy now

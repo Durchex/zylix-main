@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/api-client";
 import type {
   AdminBlogPost,
+  AdminBrand,
   AdminCategory,
   AdminOrderDetail,
   AdminOrderSummary,
@@ -76,6 +77,21 @@ export const adminCategoriesApi = {
   },
   remove(id: string) {
     return apiRequest<void>(`/admin/categories/${id}`, { method: "DELETE" });
+  },
+};
+
+export const adminBrandsApi = {
+  list() {
+    return apiRequest<{ brands: AdminBrand[] }>("/admin/brands");
+  },
+  create(input: Record<string, unknown>) {
+    return apiRequest<{ brand: AdminBrand }>("/admin/brands", { method: "POST", body: input });
+  },
+  update(id: string, input: Record<string, unknown>) {
+    return apiRequest<{ brand: AdminBrand }>(`/admin/brands/${id}`, { method: "PATCH", body: input });
+  },
+  remove(id: string) {
+    return apiRequest<void>(`/admin/brands/${id}`, { method: "DELETE" });
   },
 };
 

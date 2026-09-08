@@ -41,6 +41,39 @@ const categorySchema = new Schema<CategoryDoc>(
 
 export const Category = defineModel<CategoryDoc>("Category", categorySchema);
 
+/**
+ * Admin-managed manufacturer brands (Samsung, Hisense, ...). This is the list
+ * the product form's Brand dropdown is populated from.
+ *
+ * Deliberately not referenced by Product: `Product.brand` stays a plain
+ * string holding the chosen name. That keeps the public brand pages and the
+ * `?brand=` product filter — both of which work off the name — unchanged, at
+ * the cost of a rename here not cascading to products already saved.
+ */
+export interface BrandDoc {
+  _id: Types.ObjectId;
+  name: string;
+  slug: string;
+  description?: string | null;
+  logoUrl?: string | null;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+const brandSchema = new Schema<BrandDoc>(
+  {
+    name: { type: String, required: true, unique: true },
+    slug: { type: String, required: true, unique: true },
+    description: { type: String, default: null },
+    logoUrl: { type: String, default: null },
+    isActive: { type: Boolean, default: true },
+    sortOrder: { type: Number, default: 0 },
+  },
+  baseSchemaOptions,
+);
+
+export const Brand = defineModel<BrandDoc>("Brand", brandSchema);
+
 export interface AttributeDoc {
   _id: Types.ObjectId;
   name: string;
