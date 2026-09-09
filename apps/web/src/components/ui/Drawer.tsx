@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
@@ -16,32 +16,17 @@ export interface DrawerProps {
 
 /**
  * Right-anchored off-canvas panel. Shares Dialog's portal/Escape/scroll-lock
- * behaviour but is a separate component rather than a Dialog variant — the
- * layout (full-height, edge-anchored, slide-in) has almost nothing in common
- * with Dialog's centered box beyond those three behaviours.
+ * behaviour but is a separate component — the layout (full-height,
+ * edge-anchored, sliding) has almost nothing in common with Dialog's
+ * centered box beyond those three behaviours.
  *
- * The panel stays mounted for the length of the close transition so it can
- * animate out; `visible` drives the transform while `mounted` drives whether
- * it's in the DOM at all.
+ * The panel stays mounted and is translated off-screen when closed, rather
+ * than being added and removed around a transition. That's what makes the
+ * slide animate in both directions without any animation state to keep in
+ * sync — the transform follows `open` directly.
  */
 export function Drawer({ open, onClose, title, children, footer, className }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(open);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setMounted(true);
-      // Next frame, so the element is in the DOM at its off-screen start
-      // position before the transform flips — otherwise it just appears.
-      const raf = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(raf);
-    }
-
-    setVisible(false);
-    const timer = setTimeout(() => setMounted(false), 300);
-    return () => clearTimeout(timer);
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -63,14 +48,16 @@ export function Drawer({ open, onClose, title, children, footer, className }: Dr
     };
   }, [open, onClose]);
 
-  if (!mounted || typeof document === "undefined") return null;
+  if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50">
+    // `pointer-events-none` while closed so the invisible layer never
+    // intercepts clicks on the page behind it.
+    <div className={cn("fixed inset-0 z-50", !open && "pointer-events-none")} aria-hidden={!open}>
       <div
         className={cn(
-          "absolute inset-0 bg-ink-900/50 transition-opacity duration-200",
-          visible ? "opacity-100" : "opacity-0",
+          "absolute inset-0 bg-ink-900/50 transition-opacity duration-300",
+          open ? "opacity-100" : "opacity-0",
         )}
         onClick={onClose}
         aria-hidden="true"
@@ -83,7 +70,7 @@ export function Drawer({ open, onClose, title, children, footer, className }: Dr
         tabIndex={-1}
         className={cn(
           "absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-white shadow-elevated transition-transform duration-300 ease-out focus:outline-none dark:bg-surface-900",
-          visible ? "translate-x-0" : "translate-x-full",
+          open ? "translate-x-0" : "translate-x-full",
           className,
         )}
       >

@@ -68,11 +68,14 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [allCategoriesOpen]);
 
-  // Route changes should dismiss any open nav surface.
-  useEffect(() => {
+  // Nav surfaces are dismissed by the links inside them (see closeMenus on
+  // each) rather than by watching pathname in an effect — every navigation
+  // out of the header originates from one of those links, and closing on
+  // click avoids a state update cascading off the route change.
+  function closeMenus() {
     setMobileMenuOpen(false);
     setAllCategoriesOpen(false);
-  }, [pathname]);
+  }
 
   const isDashboardShell = pathname.startsWith("/admin");
   if (isDashboardShell) return null;
@@ -80,7 +83,9 @@ export function Header() {
   function handleSearchSubmit(e: FormEvent) {
     e.preventDefault();
     const trimmed = query.trim();
-    if (trimmed) router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    if (!trimmed) return;
+    closeMenus();
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
   const accountHref = user ? (user.role === "ADMIN" ? "/admin" : "/account") : "/auth/login";
@@ -223,6 +228,7 @@ export function Header() {
                     <Link
                       key={category.id}
                       href={`/shop/${category.slug}`}
+                      onClick={closeMenus}
                       className="flex items-center justify-between px-4 py-2.5 text-sm text-ink-900 transition-colors hover:bg-brand-50 hover:text-brand-700 dark:text-neutral-200 dark:hover:bg-surface-800"
                     >
                       {category.name}
@@ -234,6 +240,7 @@ export function Header() {
                 )}
                 <Link
                   href="/shop"
+                  onClick={closeMenus}
                   className="mt-1 block border-t border-neutral-200 px-4 pt-2.5 text-sm font-semibold text-brand-600 dark:border-surface-800 dark:text-accent-400"
                 >
                   View all products
@@ -300,7 +307,11 @@ export function Header() {
 
           <ul className="space-y-1 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             <li>
-              <Link href="/" className="block rounded-lg px-3 py-2 hover:bg-neutral-100 dark:hover:bg-surface-800">
+              <Link
+                href="/"
+                onClick={closeMenus}
+                className="block rounded-lg px-3 py-2 hover:bg-neutral-100 dark:hover:bg-surface-800"
+              >
                 Home
               </Link>
             </li>
@@ -308,6 +319,7 @@ export function Header() {
               <li key={category.id}>
                 <Link
                   href={`/shop/${category.slug}`}
+                  onClick={closeMenus}
                   className="block rounded-lg px-3 py-2 hover:bg-neutral-100 dark:hover:bg-surface-800"
                 >
                   {category.name}
@@ -315,12 +327,20 @@ export function Header() {
               </li>
             ))}
             <li>
-              <Link href="/deals" className="block rounded-lg px-3 py-2 font-semibold text-deal-600">
+              <Link
+                href="/deals"
+                onClick={closeMenus}
+                className="block rounded-lg px-3 py-2 font-semibold text-deal-600"
+              >
                 Deals
               </Link>
             </li>
             <li className="border-t border-neutral-200 pt-2 dark:border-surface-800">
-              <Link href={accountHref} className="block rounded-lg px-3 py-2 hover:bg-neutral-100 dark:hover:bg-surface-800">
+              <Link
+                href={accountHref}
+                onClick={closeMenus}
+                className="block rounded-lg px-3 py-2 hover:bg-neutral-100 dark:hover:bg-surface-800"
+              >
                 {user ? (user.role === "ADMIN" ? "Admin Dashboard" : "My Account") : "Log in"}
               </Link>
             </li>

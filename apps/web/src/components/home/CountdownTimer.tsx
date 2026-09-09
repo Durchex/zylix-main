@@ -34,9 +34,17 @@ export function CountdownTimer({
   const [remaining, setRemaining] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    setRemaining(getRemaining(targetIso, showDays));
-    const id = setInterval(() => setRemaining(getRemaining(targetIso, showDays)), 1000);
-    return () => clearInterval(id);
+    const tick = () => setRemaining(getRemaining(targetIso, showDays));
+    // The first tick is deferred rather than run synchronously in the effect
+    // body: computing it during the effect would set state in the same commit
+    // that mounted the component, cascading an immediate re-render. A 0ms
+    // timeout runs right after paint, so there's no visible delay.
+    const immediate = setTimeout(tick, 0);
+    const interval = setInterval(tick, 1000);
+    return () => {
+      clearTimeout(immediate);
+      clearInterval(interval);
+    };
   }, [targetIso, showDays]);
 
   const units = [

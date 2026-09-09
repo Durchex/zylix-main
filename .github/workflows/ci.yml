@@ -51,24 +51,9 @@ jobs:
       - run: npm run build
 
   # apps/api (Express + Prisma/Postgres) is decommissioned — see
-  # docs/DEPLOYMENT.md §6 — but its own lint/typecheck/test still run
-  # standalone here since the code is still in the repo for reference.
-  # Delete this job when apps/api itself is deleted.
-  legacy-api:
-    name: Legacy API (apps/api) — lint, typecheck, test
-    runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
-      REDIS_URL: redis://localhost:6379
-      JWT_ACCESS_SECRET: ci-access-secret-at-least-32-characters-long
-      JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters-long
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npm run lint:api
-      - run: npm --prefix apps/api run typecheck
-      - run: npm run test:api
+  # docs/DEPLOYMENT.md §6. It has no CI job any more: typechecking it needs a
+  # generated Prisma client, and scripts/postinstall.js deliberately stopped
+  # generating one once nothing imported it, so the job could only ever fail.
+  # Gating undeployed reference code that way keeps CI permanently red and
+  # hides real failures in apps/web. The directory stays in the repo for
+  # reference until it's deleted outright.

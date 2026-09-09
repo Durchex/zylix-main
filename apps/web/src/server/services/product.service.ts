@@ -234,7 +234,13 @@ export const productService = {
     }
     // Availability and search each need their own $or, and a single filter
     // object can only hold one — so both go into $and, which composes.
-    const andClauses: FilterQuery<ProductDoc>[] = [];
+    //
+    // Typed as a plain record rather than FilterQuery<ProductDoc>[]: Mongoose's
+    // FilterQuery is a deeply recursive conditional type, and an array of it
+    // holding nested object literals made the whole server typecheck run out
+    // of memory. The single cast where it's assigned below keeps the cost off
+    // the hot path without changing what's sent to Mongo.
+    const andClauses: Record<string, unknown>[] = [];
 
     if (query.availability) {
       // Stock lives on the variant when a product has variants and on the
@@ -254,7 +260,7 @@ export const productService = {
       andClauses.push({ $or: [{ name: pattern }, { brand: pattern }, { description: pattern }] });
     }
     if (andClauses.length > 0) {
-      filter.$and = andClauses;
+      filter.$and = andClauses as FilterQuery<ProductDoc>["$and"];
     }
     if (query.minPrice !== undefined || query.maxPrice !== undefined) {
       filter.basePrice = {
