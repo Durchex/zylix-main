@@ -29,12 +29,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint:web
-      # `typecheck` (apps/web/package.json) runs this as two smaller scoped
-      # passes (frontend, then the Mongoose/Next.js API layer) rather than
-      # one whole-project tsc invocation — checking everything in one pass
-      # was heavy enough to OOM Vercel's build machine outright. Each half
-      # fits comfortably within a normal runner's memory on its own.
-      - run: npm --prefix apps/web run typecheck
+      # Only the frontend half is gated here. `typecheck:server` cannot
+      # currently complete: type-checking anything that imports the Mongoose
+      # models exhausts the heap — a single two-schema model file dies at 4GB,
+      # and all of them together survive neither 6GB locally nor a CI runner.
+      # Bisecting points at Mongoose's `Model<T>` instantiation in
+      # models/base.ts: stub that generic out and the same file type-checks to
+      # completion in seconds.
+      #
+      # So the server layer is currently covered by `next build` (which
+      # compiles it) and by the runtime checks, NOT by tsc. Restore the full
+      # `npm --prefix apps/web run typecheck` here once that's solved — a red
+      # check that can never go green just hides the failures that matter.
+      - run: npm --prefix apps/web run typecheck:frontend
       - run: npm run test:web
 
   build:
