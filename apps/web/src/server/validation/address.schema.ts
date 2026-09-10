@@ -12,6 +12,12 @@ export const addressInputSchema = z.object({
   postalCode: z.string().trim().optional(),
   type: z.enum(["SHIPPING", "BILLING"]).default("SHIPPING"),
   isDefault: z.boolean().default(false),
+  // Contact and geo details used when quoting couriers. Optional so an
+  // address typed in by hand (without Places) still validates.
+  email: z.string().trim().toLowerCase().email().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  placeId: z.string().trim().optional(),
 });
 export type AddressInput = z.infer<typeof addressInputSchema>;
 

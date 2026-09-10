@@ -9,7 +9,10 @@ function toDto(address: AddressDoc) {
 
 export const addressService = {
   async list(userId: string) {
-    const addresses = await Address.find({ userId })
+    // Only addresses the customer chose to keep. Checkout writes an Address
+    // for every order (the Order references one by id), so without this
+    // filter the address book filled up with one entry per order placed.
+    const addresses = await Address.find({ userId, isSavedToAddressBook: true })
       .sort({ isDefault: -1, createdAt: -1 })
       .lean<AddressDoc[]>();
     return addresses.map(toDto);
@@ -19,7 +22,8 @@ export const addressService = {
     if (input.isDefault) {
       await Address.updateMany({ userId, type: input.type, isDefault: true }, { isDefault: false });
     }
-    const created = await Address.create({ userId, ...input });
+    // Anything created through this service is an explicit "save my address".
+    const created = await Address.create({ userId, ...input, isSavedToAddressBook: true });
     return toDto(created.toObject() as AddressDoc);
   },
 

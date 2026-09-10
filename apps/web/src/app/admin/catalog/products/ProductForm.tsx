@@ -42,6 +42,12 @@ const productFormSchema = z.object({
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]),
   isFeatured: z.boolean().default(false),
   stockQuantity: z.coerce.number().int().nonnegative().default(0),
+  // Parcel dimensions, used to quote couriers. Blank falls back to the
+  // default box size in Delivery Settings.
+  weightKg: z.coerce.number().positive().optional().or(z.literal("").transform(() => undefined)),
+  lengthCm: z.coerce.number().positive().optional().or(z.literal("").transform(() => undefined)),
+  widthCm: z.coerce.number().positive().optional().or(z.literal("").transform(() => undefined)),
+  heightCm: z.coerce.number().positive().optional().or(z.literal("").transform(() => undefined)),
   images: z.array(z.object({ url: z.string().url("Enter a valid image URL"), altText: z.string().optional() })),
   variants: z.array(
     z.object({
@@ -86,6 +92,10 @@ function toFormValues(product: AdminProduct): ProductFormValues {
     status: product.status,
     isFeatured: product.isFeatured,
     stockQuantity: product.stockQuantity,
+    weightKg: product.weightKg ?? undefined,
+    lengthCm: product.lengthCm ?? undefined,
+    widthCm: product.widthCm ?? undefined,
+    heightCm: product.heightCm ?? undefined,
     images: product.images.map((img) => ({ url: img.url, altText: img.altText ?? "" })),
     variants: product.variants.map((v) => ({
       sku: v.sku,
@@ -246,6 +256,45 @@ export function ProductForm({ productId }: { productId?: string }) {
               }
               error={errors.stockQuantity?.message}
               {...register("stockQuantity")}
+            />
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <p className="font-semibold text-ink-900 dark:text-neutral-100">Shipping dimensions</p>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Used to quote couriers at checkout. Anything left blank falls back to the default parcel
+            size in Logistics → Delivery Settings, so rates for this product will be approximate.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-4">
+            <Input
+              label="Weight (kg)"
+              type="number"
+              step="0.1"
+              error={errors.weightKg?.message}
+              {...register("weightKg")}
+            />
+            <Input
+              label="Length (cm)"
+              type="number"
+              error={errors.lengthCm?.message}
+              {...register("lengthCm")}
+            />
+            <Input
+              label="Width (cm)"
+              type="number"
+              error={errors.widthCm?.message}
+              {...register("widthCm")}
+            />
+            <Input
+              label="Height (cm)"
+              type="number"
+              error={errors.heightCm?.message}
+              {...register("heightCm")}
             />
           </div>
         </CardBody>

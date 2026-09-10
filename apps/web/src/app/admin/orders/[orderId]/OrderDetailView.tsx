@@ -32,6 +32,8 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const [carrier, setCarrier] = useState("");
   const [isUpdatingTracking, setIsUpdatingTracking] = useState(false);
   const [trackingError, setTrackingError] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   useEffect(() => {
     adminOrdersApi
@@ -68,6 +70,27 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
       setTrackingError(err instanceof ApiRequestError ? err.message : "Something went wrong.");
     } finally {
       setIsUpdatingTracking(false);
+    }
+  }
+
+  async function handleBookShipment() {
+    if (!confirm("Book this shipment? This charges your Shipbubble wallet balance.")) return;
+
+    setIsBooking(true);
+    setBookingError(null);
+    try {
+      await adminOrdersApi.bookShipment(orderId);
+      // Re-read rather than patching locally: booking also moves the order's
+      // status and writes a history entry, and the fresh copy carries both.
+      const res = await adminOrdersApi.getById(orderId);
+      setOrder(res.order);
+      setNextStatus(res.order.status);
+      setTrackingNumber(res.order.trackingNumber ?? "");
+      setCarrier(res.order.carrier ?? "");
+    } catch (err) {
+      setBookingError(err instanceof ApiRequestError ? err.message : "Something went wrong.");
+    } finally {
+      setIsBooking(false);
     }
   }
 
@@ -169,6 +192,74 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
           <Button onClick={handleUpdateStatus} isLoading={isUpdating}>
             Update status
           </Button>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <p className="font-semibold text-ink-900">Shipment</p>
+          {order.shipbubbleOrderId && <Badge variant="success">Booked</Badge>}
+        </CardHeader>
+        <CardBody className="space-y-4 text-sm">
+          {bookingError && <Alert variant="error">{bookingError}</Alert>}
+
+          {order.courierName ? (
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Courier chosen by customer</span>
+              <span className="text-ink-900">{order.courierName}</span>
+            </div>
+          ) : (
+            <p className="text-neutral-500">
+              No courier was selected — this order used the flat-rate shipping fallback, so book
+              delivery manually and record the tracking details below.
+            </p>
+          )}
+
+          {order.shipbubbleOrderId ? (
+            <>
+              <div className="flex justify-between">
+                <span className="text-neutral-500">Shipbubble order</span>
+                <span className="text-ink-900">{order.shipbubbleOrderId}</span>
+              </div>
+              {order.shipmentStatus && (
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">Shipment status</span>
+                  <span className="text-ink-900">{order.shipmentStatus}</span>
+                </div>
+              )}
+              {order.trackingUrl && (
+                <a
+                  href={order.trackingUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-block font-medium text-brand-600 hover:underline"
+                >
+                  Open tracking page
+                </a>
+              )}
+            </>
+          ) : (
+            order.courierName && (
+              <div className="space-y-2">
+                <p className="text-neutral-500">
+                  Booking hands the parcel to {order.courierName} and debits your Shipbubble wallet
+                  by the delivery fee already charged to the customer.
+                </p>
+                <Button
+                  onClick={handleBookShipment}
+                  isLoading={isBooking}
+                  disabled={order.status !== "PAID" && order.status !== "PROCESSING"}
+                >
+                  Book shipment
+                </Button>
+                {order.status !== "PAID" && order.status !== "PROCESSING" && (
+                  <p className="text-xs text-neutral-500">
+                    Available once the order is paid.
+                  </p>
+                )}
+              </div>
+            )
+          )}
         </CardBody>
       </Card>
 

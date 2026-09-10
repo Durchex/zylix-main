@@ -16,3 +16,4 @@ export * from "./order";
 export * from "./payment";
 export * from "./wallet";
 export * from "./content";
+export * from "./logistics";

@@ -3,6 +3,7 @@ import { HeroBanner } from "@/components/home/HeroBanner";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { DealsCountdownBanner } from "@/components/home/DealsCountdownBanner";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
+import { CategorySections } from "@/components/home/CategorySections";
 import { LogoStrip } from "@/components/home/LogoStrip";
 import { TrustBadges, WHY_CHOOSE_FEATURES } from "@/components/home/TrustBadges";
 import { NewsletterBar } from "@/components/layout/NewsletterBar";
@@ -33,6 +34,8 @@ export default function HomePage() {
       <DealsCountdownBanner />
 
       <FeaturedProducts />
+
+      <CategorySections />
 
       <Container>
         <TrustBadges title="Why Choose ZylixStore?" features={WHY_CHOOSE_FEATURES} layout="row" />

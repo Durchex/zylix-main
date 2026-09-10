@@ -131,6 +131,12 @@ export interface ProductDoc {
   reviewCount: number;
   viewCount: number;
   weightKg?: number | null;
+  // Parcel dimensions in cm, used to quote courier rates. Optional because
+  // most of the catalog predates them — anything unmeasured falls back to the
+  // default box size in StoreSetting.
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
   stockQuantity: number;
   seoTitle?: string | null;
   seoDescription?: string | null;
@@ -155,6 +161,9 @@ const productSchema = new Schema<ProductDoc>(
     reviewCount: { type: Number, default: 0 },
     viewCount: { type: Number, default: 0 },
     weightKg: { type: Number, default: null },
+    lengthCm: { type: Number, default: null },
+    widthCm: { type: Number, default: null },
+    heightCm: { type: Number, default: null },
     // Stock for products with no variants — they sell at basePrice using this
     // count directly. A product WITH variants tracks stock per-variant
     // instead (see ProductVariant.stockQuantity); this field is unused then.

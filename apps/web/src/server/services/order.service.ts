@@ -5,9 +5,11 @@ import { env } from "@/server/config/env";
 import { ApiError } from "@/server/http/errors";
 import { getPaymentProvider } from "@/server/services/payment";
 import { shippingService } from "@/server/services/shipping.service";
+import { logisticsService, type CourierOption } from "@/server/services/logistics";
 import { paginate } from "@/server/lib/pagination";
 import {
   Address,
+  type AddressDoc,
   Order,
   OrderItem,
   OrderStatusHistory,
@@ -114,8 +116,37 @@ export const orderService = {
     });
 
     const subtotalValue = lineItems.reduce((sum, item) => sum + item.subtotal, 0);
-    const quote = await shippingService.getQuote(input.shippingAddress.state, subtotalValue);
-    const shippingFee = quote.fee;
+
+    // Where it's going: either a saved address the customer picked, or one
+    // typed in at checkout. A saved address is re-read from the database
+    // rather than trusted from the request, and ownership is enforced.
+    let savedAddress: AddressDoc | null = null;
+    if (input.addressId) {
+      if (!Types.ObjectId.isValid(input.addressId)) {
+        throw new ApiError(404, "That address could not be found");
+      }
+      savedAddress = await Address.findById(input.addressId).lean<AddressDoc>();
+      if (!savedAddress || String(savedAddress.userId) !== userId) {
+        throw new ApiError(404, "That address could not be found");
+      }
+    }
+
+    const destinationState = savedAddress?.state ?? input.shippingAddress!.state;
+
+    // A chosen courier prices the delivery; its fee comes from the stored
+    // quote, never from the request body. With no courier chosen (Shipbubble
+    // unconfigured, or no couriers serve the route) this falls back to the
+    // flat-rate ShippingZone quote.
+    let shippingFee: number;
+    let courier: CourierOption | null = null;
+    if (input.shipping) {
+      courier = await logisticsService.resolveSelectedCourier(input.shipping);
+      shippingFee = courier.total;
+    } else {
+      const quote = await shippingService.getQuote(destinationState, subtotalValue);
+      shippingFee = quote.fee;
+    }
+
     const total = subtotalValue + shippingFee;
 
     // Stock is reserved (decremented) up front, atomically with the order
@@ -149,10 +180,26 @@ export const orderService = {
           }
         }
 
-        const [address] = await Address.create(
-          [{ userId, type: "SHIPPING", ...input.shippingAddress }],
-          { session },
-        );
+        // A saved address is referenced as-is; a new one is persisted, and
+        // only lands in the customer's address book if they asked it to.
+        let addressId: Types.ObjectId;
+        if (savedAddress) {
+          addressId = savedAddress._id;
+        } else {
+          const { saveToAddressBook, ...addressFields } = input.shippingAddress!;
+          const [created] = await Address.create(
+            [
+              {
+                userId,
+                type: "SHIPPING",
+                ...addressFields,
+                isSavedToAddressBook: saveToAddressBook,
+              },
+            ],
+            { session },
+          );
+          addressId = created._id;
+        }
 
         const [createdOrder] = await Order.create(
           [
@@ -164,8 +211,14 @@ export const orderService = {
               shippingFee,
               tax: 0,
               total,
-              shippingAddressId: address._id,
-              billingAddressId: address._id,
+              shippingAddressId: addressId,
+              billingAddressId: addressId,
+              // Recorded now, booked later — see the admin booking route.
+              courierId: courier?.courierId ?? null,
+              courierName: courier?.courierName ?? null,
+              serviceCode: courier?.serviceCode ?? null,
+              shipbubbleRequestToken: input.shipping?.requestToken ?? null,
+              carrier: courier?.courierName ?? null,
             },
           ],
           { session },

@@ -120,6 +120,16 @@ export const adminOrdersApi = {
       body: { trackingNumber, carrier },
     });
   },
+  /**
+   * Books the shipment with the courier the customer chose. This spends
+   * Shipbubble wallet balance, which is why it's an explicit admin action
+   * rather than something the payment webhook does.
+   */
+  bookShipment(id: string) {
+    return apiRequest<{
+      shipment: { shipbubbleOrderId: string; trackingUrl: string | null; status: string | null };
+    }>(`/admin/orders/${id}/book-shipment`, { method: "POST" });
+  },
 };
 
 export const adminShippingApi = {

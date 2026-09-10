@@ -46,6 +46,17 @@ const envSchema = z.object({
   PAYPAL_CLIENT_ID: z.string().optional(),
   PAYPAL_CLIENT_SECRET: z.string().optional(),
 
+  // Logistics. The key's prefix picks the environment — sb_sandbox for test,
+  // sb_prod for live — so there's no separate mode flag. Shipbubble also
+  // signs webhooks with this same key (HMAC-SHA512).
+  SHIPBUBBLE_API_KEY: z.string().optional(),
+  SHIPBUBBLE_BASE_URL: z.string().url().default("https://api.shipbubble.com/v1"),
+
+  // Server-side only, deliberately. Places requests are proxied through our
+  // own /api/v1/places/* routes rather than exposing a browser key, which
+  // would need referrer restrictions and can be lifted off any page.
+  GOOGLE_MAPS_API_KEY: z.string().optional(),
+
   DEFAULT_CURRENCY: z.string().default("NGN"),
   DEFAULT_LOCALE: z.string().default("en"),
 });

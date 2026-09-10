@@ -36,6 +36,11 @@ export const createProductSchema = z.object({
   // variant tracks its own stockQuantity instead).
   stockQuantity: z.number().int().nonnegative().default(0),
   weightKg: z.number().positive().nullable().optional(),
+  // Parcel dimensions in cm. Used to quote couriers; anything left unset
+  // falls back to the default box in delivery settings.
+  lengthCm: z.number().positive().nullable().optional(),
+  widthCm: z.number().positive().nullable().optional(),
+  heightCm: z.number().positive().nullable().optional(),
   seoTitle: z.string().trim().max(200).optional(),
   seoDescription: z.string().trim().max(300).optional(),
   images: z.array(productImageInput).default([]),

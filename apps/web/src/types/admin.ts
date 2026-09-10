@@ -30,6 +30,11 @@ export interface AdminProduct {
   // Only meaningful when variants is empty — see the schema comment on
   // Product.stockQuantity.
   stockQuantity: number;
+  // Parcel measurements used for courier quotes; null until measured.
+  weightKg: number | null;
+  lengthCm: number | null;
+  widthCm: number | null;
+  heightCm: number | null;
   avgRating: string;
   reviewCount: number;
   createdAt: string;
@@ -98,6 +103,16 @@ export interface AdminOrderDetail extends AdminOrderSummary {
   trackingNumber: string | null;
   carrier: string | null;
   shippedAt: string | null;
+  // Courier chosen by the customer at checkout. Present only when the order
+  // was quoted through Shipbubble rather than the flat-rate fallback.
+  courierName: string | null;
+  courierId: string | null;
+  serviceCode: string | null;
+  shipbubbleRequestToken: string | null;
+  // Set once the label is booked.
+  shipbubbleOrderId: string | null;
+  shipmentStatus: string | null;
+  trackingUrl: string | null;
   items: AdminOrderItem[];
   statusHistory: Array<{ id: string; status: OrderStatus; note: string | null; createdAt: string }>;
   shippingAddress: { fullName: string; line1: string; city: string; state: string } | null;

@@ -24,6 +24,23 @@ export interface AddressDoc {
   postalCode?: string | null;
   type: AddressType;
   isDefault: boolean;
+  /** Shipbubble validates against a contact, so the recipient's email rides along. */
+  email?: string | null;
+  // From Google Places. Shipbubble's address validation treats coordinates as
+  // authoritative over the address string, so carrying them through makes the
+  // courier's pickup/dropoff resolution materially more accurate.
+  latitude?: number | null;
+  longitude?: number | null;
+  placeId?: string | null;
+  /** Cached so the same address isn't re-validated with Shipbubble every checkout. */
+  shipbubbleAddressCode?: number | null;
+  /**
+   * Whether this belongs in the customer's reusable address book. Checkout
+   * writes an Address for every order (the Order references one by id), so
+   * without this flag every order silently added another entry to the
+   * customer's saved addresses — only ones they explicitly save are listed.
+   */
+  isSavedToAddressBook: boolean;
   createdAt: Date;
 }
 
@@ -41,6 +58,12 @@ const addressSchema = new Schema<AddressDoc>(
     postalCode: { type: String, default: null },
     type: { type: String, enum: ADDRESS_TYPES, default: "SHIPPING" },
     isDefault: { type: Boolean, default: false },
+    email: { type: String, default: null },
+    latitude: { type: Number, default: null },
+    longitude: { type: Number, default: null },
+    placeId: { type: String, default: null },
+    shipbubbleAddressCode: { type: Number, default: null },
+    isSavedToAddressBook: { type: Boolean, default: false, index: true },
   },
   { ...baseSchemaOptions, timestamps: { createdAt: true, updatedAt: false } },
 );
@@ -64,6 +87,22 @@ export interface OrderDoc {
   trackingNumber?: string | null;
   carrier?: string | null;
   shippedAt?: Date | null;
+  // The courier the customer picked at checkout. Recorded when the order is
+  // placed; the shipment itself isn't booked until an admin does so, because
+  // booking spends real Shipbubble wallet balance.
+  courierId?: string | null;
+  courierName?: string | null;
+  serviceCode?: string | null;
+  /**
+   * The rate-request token the courier was quoted under; booking the label
+   * needs it. Shipbubble expires these after 7 days, so an order left
+   * unbooked that long has to be re-quoted rather than booked.
+   */
+  shipbubbleRequestToken?: string | null;
+  /** Shipbubble's own order id, set once the label is booked. */
+  shipbubbleOrderId?: string | null;
+  shipmentStatus?: string | null;
+  trackingUrl?: string | null;
   placedAt: Date;
   updatedAt: Date;
 }
@@ -85,6 +124,13 @@ const orderSchema = new Schema<OrderDoc>(
     trackingNumber: { type: String, default: null },
     carrier: { type: String, default: null },
     shippedAt: { type: Date, default: null },
+    courierId: { type: String, default: null },
+    courierName: { type: String, default: null },
+    serviceCode: { type: String, default: null },
+    shipbubbleRequestToken: { type: String, default: null },
+    shipbubbleOrderId: { type: String, default: null, index: true },
+    shipmentStatus: { type: String, default: null },
+    trackingUrl: { type: String, default: null },
     placedAt: { type: Date, default: Date.now },
   },
   // Prisma named the creation timestamp `placedAt` rather than `createdAt`,

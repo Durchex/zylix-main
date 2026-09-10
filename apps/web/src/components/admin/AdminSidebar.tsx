@@ -26,7 +26,10 @@ const NAV_SECTIONS: Array<{ title: string; links: Array<{ label: string; href: s
   },
   {
     title: "Logistics",
-    links: [{ label: "Shipping Zones", href: "/admin/shipping" }],
+    links: [
+      { label: "Delivery Settings", href: "/admin/settings" },
+      { label: "Shipping Zones", href: "/admin/shipping" },
+    ],
   },
   {
     title: "People",
