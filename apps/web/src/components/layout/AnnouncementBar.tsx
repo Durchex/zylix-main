@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const SUPPORT_PHONE = "+234 901 234 5678";
+import { SUPPORT_PHONE_DISPLAY, SUPPORT_TEL_HREF, whatsAppHref } from "@/lib/contact";
 
 /**
  * The navy strip above the header. Hidden on /admin, which has its own
@@ -38,14 +37,26 @@ export function AnnouncementBar() {
             Track Your Order
           </Link>
           <a
-            href={`tel:${SUPPORT_PHONE.replace(/\s/g, "")}`}
+            href={whatsAppHref()}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label="Chat with us on WhatsApp"
+            className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+              <path d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2zm0 18.2a8.2 8.2 0 01-4.2-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.700-1.7-.8-.2-.1-.4-.1-.6.1s-.6.8-.8 1-.3.2-.6.1a6.7 6.7 0 01-3.3-2.9c-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3A3 3 0 006 10a5.2 5.2 0 001.1 2.7 11.9 11.9 0 004.6 4 5.3 5.3 0 002.4.5 2.7 2.7 0 001.8-1.3 2.2 2.2 0 00.2-1.3c-.1-.1-.3-.2-.6-.3z" />
+            </svg>
+            <span className="hidden sm:inline">WhatsApp</span>
+          </a>
+          <a
+            href={SUPPORT_TEL_HREF}
             className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M4 3h3l1.5 4-2 1.5a11 11 0 005 5L13 11.5 17 13v3a1 1 0 01-1.1 1A14 14 0 013 4.1 1 1 0 014 3z" strokeLinejoin="round" />
             </svg>
             <span className="hidden sm:inline">Support: </span>
-            {SUPPORT_PHONE}
+            {SUPPORT_PHONE_DISPLAY}
           </a>
         </div>
       </div>
