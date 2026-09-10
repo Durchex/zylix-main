@@ -47,10 +47,11 @@ export default function AboutPage() {
           authenticity, pricing transparency, and fast delivery across our whole catalog.
         </p>
         <p>
-          Every order on ZylixStore is backed by secure, Africa-first payment options (Flutterwave and
-          Paystack, alongside Stripe, PayPal, Apple Pay, and Google Pay), transparent shipping
-          timelines, and a straightforward returns process — because buying electronics online
-          should feel as simple as our tagline says.
+          Every order on ZylixStore is backed by secure, Africa-first payment options (card, bank
+          transfer, USSD and mobile money through Flutterwave, plus cryptocurrency, bank transfer
+          and your ZylixStore wallet), transparent shipping timelines, and a straightforward
+          returns process — because buying electronics online should feel as simple as our tagline
+          says.
         </p>
       </div>
 

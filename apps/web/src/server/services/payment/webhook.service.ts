@@ -42,4 +42,35 @@ export const paymentWebhookService = {
 
     console.info("[webhook] payment confirmed", { provider, providerRef, orderId: String(payment.orderId) });
   },
+
+  /**
+   * Re-keys a crypto Payment from the invoice id it was created with to the
+   * concrete payment id.
+   *
+   * A NOWPayments invoice only becomes a payment once the customer picks a
+   * coin, so there's no payment id to store at checkout. The first callback
+   * carries both; swapping the reference then is what lets `verify()` look
+   * the payment up on this and every later callback.
+   */
+  async attachCryptoPaymentId(invoiceId: string, paymentId: string) {
+    if (invoiceId === paymentId) return;
+    const result = await Payment.updateOne(
+      { provider: "CRYPTO", providerRef: invoiceId },
+      { providerRef: paymentId },
+    );
+    if (result.matchedCount > 0) {
+      console.info("[webhook] crypto payment re-keyed to payment id", { invoiceId, paymentId });
+    }
+  },
+
+  /** Marks a payment failed after the provider reports it can't complete. */
+  async failPayment(provider: PaymentProvider, providerRef: string, reason: string) {
+    const payment = await Payment.findOne({ providerRef, provider });
+    // A payment that already settled isn't un-settled by a later failure
+    // notice — that would be a refund, which is a different flow.
+    if (!payment || payment.status === "SUCCESS") return;
+
+    await Payment.updateOne({ _id: payment._id }, { status: "FAILED" });
+    console.warn("[webhook] payment failed", { provider, providerRef, reason });
+  },
 };

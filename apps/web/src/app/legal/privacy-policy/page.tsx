@@ -20,8 +20,8 @@ export default function PrivacyPolicyPage() {
         <li>Account information: name, email address, phone number, delivery addresses.</li>
         <li>
           Order information: items purchased, order value, and payment status (we do not store
-          raw card numbers — payments are processed by Flutterwave, Paystack, Stripe, PayPal, or
-          the relevant wallet provider, and we only retain a tokenized reference).
+          raw card numbers — payments are processed by Flutterwave, our crypto payment provider,
+          or your ZylixStore wallet, and we only retain a tokenized reference).
         </li>
         <li>Usage data: pages viewed, search queries, device and browser type, IP address.</li>
         <li>Communications: messages you send us via contact forms, live chat, or WhatsApp.</li>

@@ -56,13 +56,15 @@ export const FULFILLMENT_STATUSES = [
 ] as const;
 export type FulfillmentStatus = (typeof FULFILLMENT_STATUSES)[number];
 
+/**
+ * Paystack, Stripe, PayPal, Apple Pay and Google Pay were removed — the store
+ * settled on Flutterwave for cards/bank/USSD, crypto, the in-house wallet and
+ * manual transfer. Verified before removing that no Payment record referenced
+ * any of them, so the values could go rather than linger as dead enum members.
+ */
 export const PAYMENT_PROVIDERS = [
   "FLUTTERWAVE",
-  "PAYSTACK",
-  "STRIPE",
-  "PAYPAL",
-  "APPLE_PAY",
-  "GOOGLE_PAY",
+  "CRYPTO",
   "WALLET",
   "BANK_TRANSFER",
 ] as const;

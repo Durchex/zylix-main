@@ -14,14 +14,30 @@ import { apiRequest, ApiRequestError } from "@/lib/api-client";
 import { readCheckoutAddress, type StoredCheckoutAddress } from "@/lib/checkout";
 
 const PAYMENT_METHODS = [
-  { id: "FLUTTERWAVE", label: "Flutterwave", detail: "Card, bank transfer, USSD, mobile money", primary: true, available: true },
-  { id: "PAYSTACK", label: "Paystack", detail: "Card, bank transfer, USSD", primary: true, available: true },
-  { id: "STRIPE", label: "Stripe", detail: "International cards", primary: false, available: true },
-  { id: "WALLET", label: "ZylixStore Wallet", detail: "Pay instantly from your wallet balance", primary: false, available: true },
-  { id: "BANK_TRANSFER", label: "Bank Transfer", detail: "Manual transfer, confirmed within 1 business day", primary: false, available: true },
-  { id: "PAYPAL", label: "PayPal", detail: "Coming soon", primary: false, available: false },
-  { id: "APPLE_PAY", label: "Apple Pay", detail: "Coming soon", primary: false, available: false },
-  { id: "GOOGLE_PAY", label: "Google Pay", detail: "Coming soon", primary: false, available: false },
+  {
+    id: "FLUTTERWAVE",
+    label: "Card / Bank / USSD",
+    detail: "Pay with a card, bank transfer, USSD or mobile money via Flutterwave",
+    primary: true,
+  },
+  {
+    id: "CRYPTO",
+    label: "Cryptocurrency",
+    detail: "Pay in Bitcoin, USDT, Ethereum and more — converted at checkout",
+    primary: false,
+  },
+  {
+    id: "WALLET",
+    label: "ZylixStore Wallet",
+    detail: "Pay instantly from your wallet balance",
+    primary: false,
+  },
+  {
+    id: "BANK_TRANSFER",
+    label: "Bank Transfer",
+    detail: "Manual transfer, confirmed within 1 business day",
+    primary: false,
+  },
 ];
 
 interface Courier {
@@ -140,8 +156,8 @@ export default function CheckoutPaymentPage() {
       clearCart();
 
       if (order.checkoutUrl) {
-        // Flutterwave/Paystack/Stripe: redirect to their hosted checkout.
-        // They redirect back to the confirmation page once payment completes.
+        // Flutterwave and crypto both hand off to a hosted page, which
+        // redirects back to the confirmation page when it's done.
         window.location.href = order.checkoutUrl;
         return;
       }
@@ -247,10 +263,9 @@ export default function CheckoutPaymentPage() {
                 <button
                   key={method.id}
                   type="button"
-                  disabled={!method.available}
                   onClick={() => setSelectedMethod(method.id)}
                   className={cn(
-                    "flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                    "flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-colors",
                     selectedMethod === method.id
                       ? "border-brand-500 bg-brand-50 dark:border-accent-500 dark:bg-surface-800"
                       : "border-neutral-200 hover:border-neutral-300 dark:border-surface-700",
@@ -260,7 +275,6 @@ export default function CheckoutPaymentPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-ink-900 dark:text-neutral-100">{method.label}</p>
                       {method.primary && <Badge variant="brand">Recommended</Badge>}
-                      {!method.available && <Badge variant="neutral">Coming soon</Badge>}
                     </div>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">{method.detail}</p>
                   </div>

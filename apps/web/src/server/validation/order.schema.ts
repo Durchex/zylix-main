@@ -43,16 +43,7 @@ export const createOrderSchema = z
     addressId: z.string().trim().min(1).optional(),
     shippingAddress: shippingAddressInputSchema.optional(),
     shipping: courierSelectionSchema.optional(),
-    paymentProvider: z.enum([
-      "FLUTTERWAVE",
-      "PAYSTACK",
-      "STRIPE",
-      "PAYPAL",
-      "APPLE_PAY",
-      "GOOGLE_PAY",
-      "WALLET",
-      "BANK_TRANSFER",
-    ]),
+    paymentProvider: z.enum(["FLUTTERWAVE", "CRYPTO", "WALLET", "BANK_TRANSFER"]),
   })
   .refine((value) => Boolean(value.addressId || value.shippingAddress), {
     message: "A shipping address is required",

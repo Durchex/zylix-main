@@ -38,13 +38,12 @@ const envSchema = z.object({
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
   FLUTTERWAVE_ENCRYPTION_KEY: z.string().optional(),
   FLUTTERWAVE_WEBHOOK_SECRET_HASH: z.string().optional(),
-  PAYSTACK_PUBLIC_KEY: z.string().optional(),
-  PAYSTACK_SECRET_KEY: z.string().optional(),
-  STRIPE_PUBLIC_KEY: z.string().optional(),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  PAYPAL_CLIENT_ID: z.string().optional(),
-  PAYPAL_CLIENT_SECRET: z.string().optional(),
+  // Crypto, via NOWPayments. The IPN secret is separate from the API key and
+  // is generated in their dashboard — it's what signs callbacks, so without
+  // it a callback can't be trusted and the provider stays unavailable.
+  NOWPAYMENTS_API_KEY: z.string().optional(),
+  NOWPAYMENTS_IPN_SECRET: z.string().optional(),
+  NOWPAYMENTS_BASE_URL: z.string().url().default("https://api.nowpayments.io/v1"),
 
   // Logistics. The key's prefix picks the environment — sb_sandbox for test,
   // sb_prod for live — so there's no separate mode flag. Shipbubble also

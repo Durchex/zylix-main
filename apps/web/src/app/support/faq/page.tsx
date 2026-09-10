@@ -11,7 +11,7 @@ const FAQ_ITEMS: AccordionItemData[] = [
   {
     question: "What payment methods does ZylixStore accept?",
     answer:
-      "Flutterwave and Paystack (cards, bank transfer, USSD, mobile money) are our primary payment options, settled in Naira. Stripe, PayPal, Apple Pay, and Google Pay are also available for international cards.",
+      "Flutterwave (cards, bank transfer, USSD and mobile money) is our primary payment option, settled in Naira. You can also pay in cryptocurrency — Bitcoin, USDT, Ethereum and more, converted at checkout — by manual bank transfer, or from your ZylixStore wallet balance.",
   },
   {
     question: "How long does delivery take?",
