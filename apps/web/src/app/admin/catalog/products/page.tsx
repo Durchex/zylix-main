@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Pagination } from "@/components/storefront/Pagination";
 import { formatPrice } from "@/lib/utils";
 import { adminProductsApi } from "@/lib/api/admin";
 import { ApiRequestError } from "@/lib/api-client";
@@ -29,10 +30,13 @@ function isInStock(product: AdminProduct): boolean {
 }
 
 const RESTOCK_DEFAULT_QUANTITY = 50;
+const PAGE_SIZE = 20;
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<AdminProduct[] | null>(null);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,14 +45,20 @@ export default function AdminProductsPage() {
 
   const load = useCallback(() => {
     adminProductsApi
-      .list({ search: search || undefined, status: (status as AdminProduct["status"]) || undefined })
+      .list({
+        search: search || undefined,
+        status: (status as AdminProduct["status"]) || undefined,
+        page,
+        pageSize: PAGE_SIZE,
+      })
       .then((res) => {
         setError(null);
         setProducts(res.items);
         setTotal(res.total);
+        setTotalPages(res.totalPages);
       })
       .catch((err) => setError(err instanceof ApiRequestError ? err.message : "Something went wrong."));
-  }, [search, status]);
+  }, [search, status, page]);
 
   useEffect(() => {
     load();
@@ -59,7 +69,10 @@ export default function AdminProductsPage() {
     setDeletingId(id);
     try {
       await adminProductsApi.remove(id);
-      load();
+      // Removing the only row on the last page would leave an empty table —
+      // step back a page instead, which reloads via the page dependency.
+      if (products?.length === 1 && page > 1) setPage((p) => p - 1);
+      else load();
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : "Something went wrong.");
     } finally {
@@ -98,10 +111,20 @@ export default function AdminProductsPage() {
         <Input
           placeholder="Search by name, SKU, or brand"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="max-w-xs"
         />
-        <Select value={status} onChange={(e) => setStatus(e.target.value)} className="max-w-xs">
+        <Select
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
+          className="max-w-xs"
+        >
           <option value="">All statuses</option>
           <option value="DRAFT">Draft</option>
           <option value="ACTIVE">Active</option>
@@ -194,9 +217,14 @@ export default function AdminProductsPage() {
         )}
       </div>
 
-      {products && (
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">{total} product{total === 1 ? "" : "s"} total</p>
+      {products && total > 0 && (
+        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          Showing {(page - 1) * PAGE_SIZE + 1}&ndash;{Math.min(page * PAGE_SIZE, total)} of {total}{" "}
+          product{total === 1 ? "" : "s"}
+        </p>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="mt-6" />
     </div>
   );
 }

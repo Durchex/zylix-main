@@ -28,27 +28,42 @@ function pageWindow(current: number, total: number): (number | "gap")[] {
   return withGaps;
 }
 
-export function Pagination({
-  page,
-  totalPages,
-  buildHref,
-}: {
+/**
+ * Two modes, because the two places that paginate work differently:
+ * storefront listings keep their state in the URL (so a page is linkable and
+ * survives a refresh), while admin tables hold filters in local state. Link
+ * mode renders anchors and is crawlable; button mode just calls back.
+ */
+type PaginationProps = {
   page: number;
   totalPages: number;
-  /** Given a page number, returns the URL for it (preserving other filters). */
-  buildHref: (page: number) => string;
-}) {
+  className?: string;
+} & (
+  | {
+      /** Given a page number, returns the URL for it (preserving other filters). */
+      buildHref: (page: number) => string;
+      onPageChange?: never;
+    }
+  | {
+      buildHref?: never;
+      onPageChange: (page: number) => void;
+    }
+);
+
+export function Pagination({ page, totalPages, buildHref, onPageChange, className }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const pages = pageWindow(page, totalPages);
 
+  function itemProps(target: number) {
+    return buildHref
+      ? { href: buildHref(target) }
+      : { onClick: () => onPageChange?.(target) };
+  }
+
   return (
-    <nav className="mt-10 flex items-center justify-center gap-1.5" aria-label="Pagination">
-      <PageLink
-        href={buildHref(page - 1)}
-        disabled={page <= 1}
-        ariaLabel="Previous page"
-      >
+    <nav className={cn("mt-10 flex items-center justify-center gap-1.5", className)} aria-label="Pagination">
+      <PageLink {...itemProps(page - 1)} disabled={page <= 1} ariaLabel="Previous page">
         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 5l-5 5 5 5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -60,17 +75,13 @@ export function Pagination({
             …
           </span>
         ) : (
-          <PageLink key={entry} href={buildHref(entry)} active={entry === page} ariaLabel={`Page ${entry}`}>
+          <PageLink key={entry} {...itemProps(entry)} active={entry === page} ariaLabel={`Page ${entry}`}>
             {entry}
           </PageLink>
         ),
       )}
 
-      <PageLink
-        href={buildHref(page + 1)}
-        disabled={page >= totalPages}
-        ariaLabel="Next page"
-      >
+      <PageLink {...itemProps(page + 1)} disabled={page >= totalPages} ariaLabel="Next page">
         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M8 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -81,12 +92,14 @@ export function Pagination({
 
 function PageLink({
   href,
+  onClick,
   children,
   active = false,
   disabled = false,
   ariaLabel,
 }: {
-  href: string;
+  href?: string;
+  onClick?: () => void;
   children: React.ReactNode;
   active?: boolean;
   disabled?: boolean;
@@ -100,6 +113,8 @@ function PageLink({
     disabled && "pointer-events-none opacity-40",
   );
 
+  // Rendered as a span rather than a disabled control so it stays out of the
+  // tab order at the ends of the range.
   if (disabled) {
     return (
       <span className={className} aria-disabled="true" aria-label={ariaLabel}>
@@ -108,9 +123,23 @@ function PageLink({
     );
   }
 
+  if (href) {
+    return (
+      <Link href={href} className={className} aria-label={ariaLabel} aria-current={active ? "page" : undefined}>
+        {children}
+      </Link>
+    );
+  }
+
   return (
-    <Link href={href} className={className} aria-label={ariaLabel} aria-current={active ? "page" : undefined}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={className}
+      aria-label={ariaLabel}
+      aria-current={active ? "page" : undefined}
+    >
       {children}
-    </Link>
+    </button>
   );
 }
