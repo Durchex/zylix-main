@@ -4,13 +4,18 @@ import { ProductCarousel } from "@/components/storefront/ProductCarousel";
 import { serverApiRequest } from "@/lib/server-api";
 import type { CategorySummary, PaginatedResult, ProductSummary } from "@/types/product";
 
-/** How many categories get their own row before the page gets too long. */
-const MAX_CATEGORY_SECTIONS = 6;
 const PRODUCTS_PER_ROW = 12;
 
 /**
  * One carousel per category, each linking through to that category's filtered
  * listing.
+ *
+ * Every category holding stock gets a row — there's deliberately no cap. An
+ * earlier limit of six silently hid whole categories (including one with 35
+ * products) as the catalog grew, which is worse than a long page: a shopper
+ * has no way to tell the section is truncated. Admins control both which
+ * categories exist and their order, via sortOrder, so the length of this page
+ * is already theirs to manage.
  *
  * Categories are fetched first, then their products in parallel — a single
  * unfiltered product fetch couldn't guarantee enough items from each category
@@ -24,8 +29,9 @@ export async function CategorySections() {
   const categories = (categoryResult?.categories ?? [])
     .filter((category) => !category.parentId)
     // Skip categories with nothing in them rather than rendering empty rows.
-    .filter((category) => (category.productCount ?? 0) > 0)
-    .slice(0, MAX_CATEGORY_SECTIONS);
+    // productCount counts ACTIVE products only, so a category holding nothing
+    // but drafts correctly stays hidden.
+    .filter((category) => (category.productCount ?? 0) > 0);
 
   if (categories.length === 0) return null;
 
