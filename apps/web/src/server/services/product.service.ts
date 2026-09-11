@@ -232,6 +232,12 @@ export const productService = {
     if (query.featured) {
       filter.isFeatured = true;
     }
+    if (query.onSale) {
+      // Comparing two fields of the same document needs $expr. A null
+      // compareAtPrice sorts below any number here, so unmarked-down products
+      // drop out without needing a separate null check.
+      filter.$expr = { $gt: ["$compareAtPrice", "$basePrice"] };
+    }
     // Availability and search each need their own $or, and a single filter
     // object can only hold one — so both go into $and, which composes.
     //

@@ -15,6 +15,14 @@ export const productListQuerySchema = z.object({
     .string()
     .optional()
     .transform((v) => v === "true"),
+  // Only products actually marked down — a compare-at price above what's
+  // being charged. The /deals page was already passing this; until now the
+  // schema didn't declare it, so Zod stripped it and the page silently
+  // listed the entire catalogue as discounted.
+  onSale: z
+    .string()
+    .optional()
+    .transform((v) => v === "true"),
   ids: z.string().trim().optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),

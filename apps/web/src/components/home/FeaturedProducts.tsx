@@ -5,14 +5,25 @@ import { serverApiRequest } from "@/lib/server-api";
 import type { CategorySummary, PaginatedResult, ProductSummary } from "@/types/product";
 
 /**
- * Featured products with category tabs. Fetches one page of products and one
- * list of categories on the server, then filters between tabs client-side —
- * a tab switch shouldn't cost a round trip for a set this small, and the
- * public products endpoint already returns each product's category.
+ * Products an admin has flagged as featured, with category tabs.
+ *
+ * The filter is `featured=true` and nothing else. It previously fetched by
+ * rating with no featured filter at all, so the section showed whatever
+ * happened to sort first — arbitrary products under a heading claiming they
+ * were featured, and no way for an admin to influence it by ticking the box
+ * on a product.
+ *
+ * Renders nothing when no product is flagged. A promotional rail with no
+ * chosen products has nothing to say, and quietly filling it with stand-ins
+ * is what caused the original problem.
+ *
+ * Categories come along so tabs can filter the set client-side — a tab switch
+ * shouldn't cost a round trip for a set this small, and the products endpoint
+ * already returns each product's category.
  */
 export async function FeaturedProducts() {
   const [productResult, categoryResult] = await Promise.all([
-    serverApiRequest<PaginatedResult<ProductSummary>>("/products?pageSize=24&sort=rating", {
+    serverApiRequest<PaginatedResult<ProductSummary>>("/products?featured=true&pageSize=24", {
       tags: ["products"],
     }),
     serverApiRequest<{ categories: CategorySummary[] }>("/categories", { tags: ["categories"] }),
@@ -33,7 +44,7 @@ export async function FeaturedProducts() {
           Featured Products
         </h2>
         <Link
-          href="/shop"
+          href="/shop?featured=true"
           className="text-sm font-semibold text-brand-600 hover:underline dark:text-accent-400"
         >
           View all
