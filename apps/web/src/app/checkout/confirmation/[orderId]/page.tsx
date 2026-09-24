@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { serverApiRequest } from "@/lib/server-api";
+import { formatPrice } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Order Confirmed",
@@ -19,6 +20,13 @@ interface OrderConfirmation {
   total: string;
   currency: string;
   status: string;
+  paymentProvider: string | null;
+  bankTransfer: {
+    bankName: string;
+    accountName: string | null;
+    accountNumber: string;
+    instructions: string | null;
+  } | null;
 }
 
 export default async function CheckoutConfirmationPage({ params }: ConfirmationPageProps) {
@@ -61,12 +69,54 @@ export default async function CheckoutConfirmationPage({ params }: ConfirmationP
         ) : (
           <>
             Order <span className="font-medium text-ink-900 dark:text-neutral-100">{result.order.orderNumber}</span> has
-            been created. If you chose bank transfer, complete your transfer and we&rsquo;ll
-            confirm it within 1 business day. If you were redirected here after paying, your
-            payment is still being confirmed — check back shortly.
+            been created.{" "}
+            {result.order.bankTransfer
+              ? "Transfer the total to the account below and we'll confirm it within 1 business day."
+              : "If you were redirected here after paying, your payment is still being confirmed — check back shortly."}
           </>
         )}
       </p>
+      {result.order.bankTransfer && (
+        <div className="mt-8 w-full rounded-2xl border border-neutral-200 bg-white p-5 text-left dark:border-surface-800 dark:bg-surface-900">
+          <p className="text-sm font-semibold text-ink-900 dark:text-neutral-100">
+            Transfer {formatPrice(Number(result.order.total), result.order.currency)} to
+          </p>
+          <dl className="mt-3 space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-neutral-500 dark:text-neutral-400">Bank</dt>
+              <dd className="font-medium text-ink-900 dark:text-neutral-100">
+                {result.order.bankTransfer.bankName}
+              </dd>
+            </div>
+            {result.order.bankTransfer.accountName && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-neutral-500 dark:text-neutral-400">Account name</dt>
+                <dd className="font-medium text-ink-900 dark:text-neutral-100">
+                  {result.order.bankTransfer.accountName}
+                </dd>
+              </div>
+            )}
+            <div className="flex justify-between gap-4">
+              <dt className="text-neutral-500 dark:text-neutral-400">Account number</dt>
+              <dd className="font-mono font-semibold tracking-wide text-ink-900 dark:text-neutral-100">
+                {result.order.bankTransfer.accountNumber}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-4 border-t border-neutral-200 pt-2 dark:border-surface-800">
+              <dt className="text-neutral-500 dark:text-neutral-400">Reference</dt>
+              <dd className="font-medium text-ink-900 dark:text-neutral-100">
+                {result.order.orderNumber}
+              </dd>
+            </div>
+          </dl>
+          {result.order.bankTransfer.instructions && (
+            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+              {result.order.bankTransfer.instructions}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="mt-8 flex gap-3">
         <Link href="/account/orders">
           <Button variant="outline">View order</Button>

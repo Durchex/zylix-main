@@ -13,32 +13,12 @@ import { useCartStore } from "@/store/cart.store";
 import { apiRequest, ApiRequestError } from "@/lib/api-client";
 import { readCheckoutAddress, type StoredCheckoutAddress } from "@/lib/checkout";
 
-const PAYMENT_METHODS = [
-  {
-    id: "FLUTTERWAVE",
-    label: "Card / Bank / USSD",
-    detail: "Pay with a card, bank transfer, USSD or mobile money via Flutterwave",
-    primary: true,
-  },
-  {
-    id: "CRYPTO",
-    label: "Cryptocurrency",
-    detail: "Pay in Bitcoin, USDT, Ethereum and more — converted at checkout",
-    primary: false,
-  },
-  {
-    id: "WALLET",
-    label: "ZylixStore Wallet",
-    detail: "Pay instantly from your wallet balance",
-    primary: false,
-  },
-  {
-    id: "BANK_TRANSFER",
-    label: "Bank Transfer",
-    detail: "Manual transfer, confirmed within 1 business day",
-    primary: false,
-  },
-];
+interface PaymentMethod {
+  provider: string;
+  label: string;
+  detail: string;
+  primary: boolean;
+}
 
 interface Courier {
   courierId: string;
@@ -55,7 +35,8 @@ export default function CheckoutPaymentPage() {
   const subtotal = useCartStore((s) => s.subtotal());
   const clearCart = useCartStore((s) => s.clear);
 
-  const [selectedMethod, setSelectedMethod] = useState("FLUTTERWAVE");
+  const [methods, setMethods] = useState<PaymentMethod[] | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,7 +91,21 @@ export default function CheckoutPaymentPage() {
     if (items.length === 0) return;
     // Deferred past the mount commit — loadRates sets state on its first
     // line, and running it synchronously here would cascade a render.
-    const timer = setTimeout(() => void loadRates(), 0);
+    const timer = setTimeout(() => {
+      void loadRates();
+      // What's on offer is decided server-side (admin toggles, plus whether
+      // each gateway has credentials), so it's fetched rather than hardcoded.
+      void apiRequest<{ methods: PaymentMethod[] }>("/payment-methods")
+        .then((res) => {
+          setMethods(res.methods);
+          // Preselect the recommended method, falling back to the first on
+          // offer — never a fixed provider, which might be switched off.
+          setSelectedMethod(
+            (res.methods.find((m) => m.primary) ?? res.methods[0])?.provider ?? null,
+          );
+        })
+        .catch(() => setMethods([]));
+    }, 0);
     return () => clearTimeout(timer);
     // Quoted once for the cart as it stands on arrival; the cart isn't
     // editable from this step.
@@ -120,6 +115,10 @@ export default function CheckoutPaymentPage() {
   async function handlePlaceOrder() {
     if (!selectedCourier) {
       setError("Choose a delivery option first.");
+      return;
+    }
+    if (!selectedMethod) {
+      setError("Choose a payment method first.");
       return;
     }
 
@@ -258,37 +257,50 @@ export default function CheckoutPaymentPage() {
 
           <section>
             <h2 className="mb-3 font-semibold text-ink-900 dark:text-neutral-100">Payment method</h2>
-            <div className="space-y-3">
-              {PAYMENT_METHODS.map((method) => (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setSelectedMethod(method.id)}
-                  className={cn(
-                    "flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-colors",
-                    selectedMethod === method.id
-                      ? "border-brand-500 bg-brand-50 dark:border-accent-500 dark:bg-surface-800"
-                      : "border-neutral-200 hover:border-neutral-300 dark:border-surface-700",
-                  )}
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-ink-900 dark:text-neutral-100">{method.label}</p>
-                      {method.primary && <Badge variant="brand">Recommended</Badge>}
-                    </div>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{method.detail}</p>
-                  </div>
-                  <div
+            {methods === null ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }, (_, i) => (
+                  <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : methods.length === 0 ? (
+              <Alert variant="error">
+                No payment method is available right now. Please contact support so we can take
+                your order.
+              </Alert>
+            ) : (
+              <div className="space-y-3">
+                {methods.map((method) => (
+                  <button
+                    key={method.provider}
+                    type="button"
+                    onClick={() => setSelectedMethod(method.provider)}
                     className={cn(
-                      "h-5 w-5 shrink-0 rounded-full border-2",
-                      selectedMethod === method.id
-                        ? "border-brand-500 bg-brand-500 dark:border-accent-500 dark:bg-accent-500"
-                        : "border-neutral-300 dark:border-surface-600",
+                      "flex w-full items-center justify-between rounded-2xl border p-4 text-left transition-colors",
+                      selectedMethod === method.provider
+                        ? "border-brand-500 bg-brand-50 dark:border-accent-500 dark:bg-surface-800"
+                        : "border-neutral-200 hover:border-neutral-300 dark:border-surface-700",
                     )}
-                  />
-                </button>
-              ))}
-            </div>
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-ink-900 dark:text-neutral-100">{method.label}</p>
+                        {method.primary && <Badge variant="brand">Recommended</Badge>}
+                      </div>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">{method.detail}</p>
+                    </div>
+                    <div
+                      className={cn(
+                        "h-5 w-5 shrink-0 rounded-full border-2",
+                        selectedMethod === method.provider
+                          ? "border-brand-500 bg-brand-500 dark:border-accent-500 dark:bg-accent-500"
+                          : "border-neutral-300 dark:border-surface-600",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
@@ -327,7 +339,7 @@ export default function CheckoutPaymentPage() {
               className="w-full"
               size="lg"
               isLoading={placing}
-              disabled={!selectedCourier}
+              disabled={!selectedCourier || !selectedMethod}
               onClick={handlePlaceOrder}
             >
               Place order

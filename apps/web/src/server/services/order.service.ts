@@ -4,6 +4,7 @@ import mongoose, { Types } from "mongoose";
 import { env } from "@/server/config/env";
 import { ApiError } from "@/server/http/errors";
 import { getPaymentProvider } from "@/server/services/payment";
+import { paymentSettingsService } from "@/server/services/payment/settings.service";
 import { shippingService } from "@/server/services/shipping.service";
 import { logisticsService, type CourierOption } from "@/server/services/logistics";
 import { paginate } from "@/server/lib/pagination";
@@ -69,6 +70,12 @@ export const orderService = {
     if (!user) {
       throw new ApiError(404, "User not found");
     }
+
+    // Checked here rather than relying on checkout only rendering enabled
+    // methods — the UI list is a convenience, this is the boundary. Done
+    // before any stock is touched so a rejected method can't leave the
+    // transaction half-done.
+    await paymentSettingsService.assertAvailable(input.paymentProvider);
 
     const productIds = [...new Set(input.items.map((item) => item.productId))].filter((id) =>
       Types.ObjectId.isValid(id),
@@ -312,11 +319,28 @@ export const orderService = {
     if (!order) {
       throw new ApiError(404, "Order not found");
     }
+
+    // A bank-transfer customer needs somewhere to send the money, and this
+    // page is the first place they can be told. Only fetched for unpaid
+    // bank-transfer orders — there's nothing to pay on a settled order, and
+    // publishing account details on every confirmation is needless.
+    const payment = await Payment.findOne({ orderId: order._id })
+      .select("provider")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const awaitingTransfer = payment?.provider === "BANK_TRANSFER" && order.status !== "PAID";
+    const bankTransfer = awaitingTransfer
+      ? await paymentSettingsService.getBankTransferDetails()
+      : null;
+
     return {
       orderNumber: order.orderNumber,
       total: String(order.total),
       currency: order.currency,
       status: order.status,
+      paymentProvider: payment?.provider ?? null,
+      bankTransfer,
     };
   },
 
