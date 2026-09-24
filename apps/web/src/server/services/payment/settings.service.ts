@@ -75,7 +75,14 @@ export const paymentSettingsService = {
   /** Every method with its full status — what the admin screen renders. */
   async listAll(): Promise<PaymentMethodStatus[]> {
     const settings = await getStoreSettings();
-    const enabled = new Set(settings.enabledPaymentMethods ?? []);
+
+    // An absent field is not the same as an empty one. Schema defaults only
+    // apply when a document is created, so a settings document written before
+    // this field existed reads back as undefined — treating that as "nothing
+    // enabled" would take every payment method offline on deploy. Undefined
+    // means "never configured", so fall back to all; an explicit empty array
+    // means an admin really did switch everything off.
+    const enabled = new Set(settings.enabledPaymentMethods ?? PAYMENT_PROVIDERS);
 
     return PAYMENT_PROVIDERS.map((provider) => {
       const isEnabled = enabled.has(provider);
