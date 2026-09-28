@@ -7,7 +7,7 @@ export const POST = withRoute(
   async (req) => {
     const user = requireAuth(req);
     const input = createOrderSchema.parse(await readJson(req));
-    return orderService.createOrder(user.id, input);
+    return orderService.createOrder(user.id, input, req.nextUrl.origin);
   },
   { status: 201 },
 );

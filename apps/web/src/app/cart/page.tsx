@@ -6,6 +6,8 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { CartItemRow } from "@/components/cart/CartItemRow";
+import { CartChangeNotice } from "@/components/cart/CartChangeNotice";
+import { useCartPriceSync } from "@/lib/use-cart-price-sync";
 import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cart.store";
 
@@ -14,6 +16,7 @@ export default function CartPage() {
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal());
   const totalQuantity = useCartStore((s) => s.totalQuantity());
+  const { changes } = useCartPriceSync();
 
   if (items.length === 0) {
     return (
@@ -46,6 +49,7 @@ export default function CartPage() {
 
   return (
     <Container className="py-10">
+      <CartChangeNotice changes={changes} />
       <h1 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-neutral-50">Your Cart</h1>
       <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
         {totalQuantity} item{totalQuantity === 1 ? "" : "s"} in your cart

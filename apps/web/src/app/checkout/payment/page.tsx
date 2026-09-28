@@ -8,6 +8,8 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { CartChangeNotice } from "@/components/cart/CartChangeNotice";
+import { useCartPriceSync } from "@/lib/use-cart-price-sync";
 import { formatPrice, cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart.store";
 import { apiRequest, ApiRequestError } from "@/lib/api-client";
@@ -34,6 +36,7 @@ export default function CheckoutPaymentPage() {
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal());
   const clearCart = useCartStore((s) => s.clear);
+  const { changes, synced } = useCartPriceSync();
 
   const [methods, setMethods] = useState<PaymentMethod[] | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -176,6 +179,7 @@ export default function CheckoutPaymentPage() {
 
   return (
     <Container className="py-10">
+      <CartChangeNotice changes={changes} />
       <h1 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-neutral-50">
         Delivery &amp; Payment
       </h1>
@@ -339,7 +343,9 @@ export default function CheckoutPaymentPage() {
               className="w-full"
               size="lg"
               isLoading={placing}
-              disabled={!selectedCourier || !selectedMethod}
+              // Held until the cart has been reconciled with today's prices, so the
+              // total on the button is the total that will be charged.
+              disabled={!selectedCourier || !selectedMethod || !synced}
               onClick={handlePlaceOrder}
             >
               Place order

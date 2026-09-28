@@ -3,7 +3,7 @@ import { withRoute, readJson } from "@/server/http/route";
 import { attachUserIfPresent } from "@/server/http/auth";
 import { enforceRateLimit, publicFormRateLimit } from "@/server/http/rateLimit";
 import { ApiError } from "@/server/http/errors";
-import { logisticsService } from "@/server/services/logistics";
+import { computeItemsSubtotal, logisticsService } from "@/server/services/logistics";
 import { shippingService } from "@/server/services/shipping.service";
 import { Address, User, type AddressDoc } from "@/server/models";
 import { shippingRatesSchema } from "@/server/validation/order.schema";
@@ -63,7 +63,11 @@ export const POST = withRoute(async (req) => {
 
   // Fallback: one synthetic "standard delivery" option built from the flat
   // rate, so the checkout UI has a single shape to render either way.
-  const flat = await shippingService.getQuote(address.state, 0);
+  // Quoted against the real subtotal — order creation prices this same fee
+  // against the real subtotal, and the two must agree or the total shifts
+  // between this step and the charge.
+  const subtotal = await computeItemsSubtotal(input.items);
+  const flat = await shippingService.getQuote(address.state, subtotal);
   return {
     couriers: [
       {

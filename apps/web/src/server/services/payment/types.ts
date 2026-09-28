@@ -8,6 +8,8 @@ export interface InitiatePaymentParams {
   email: string;
   userId?: string;
   redirectUrl: string;
+  /** Public site origin, for callbacks the provider posts back to. */
+  baseUrl: string;
 }
 
 export interface InitiatePaymentResult {

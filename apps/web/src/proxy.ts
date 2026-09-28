@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/account", "/admin"];
+const PROTECTED_PREFIXES = ["/account", "/admin", "/checkout"];
 // Set by useAuthStore (see auth.store.ts) — a plain, client-readable marker,
 // not the API's httpOnly "zylix_rt" refresh cookie. Middleware can't verify
 // a JWT signature at the edge, so this is a fast, cheap presence check for

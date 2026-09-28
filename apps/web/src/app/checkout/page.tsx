@@ -13,6 +13,8 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Alert } from "@/components/ui/Alert";
 import { AddressAutocomplete, type ResolvedPlace } from "@/components/address/AddressAutocomplete";
 import { apiRequest } from "@/lib/api-client";
+import { CartChangeNotice } from "@/components/cart/CartChangeNotice";
+import { useCartPriceSync } from "@/lib/use-cart-price-sync";
 import { formatPrice, cn } from "@/lib/utils";
 import { writeCheckoutAddress } from "@/lib/checkout";
 import { useCartStore } from "@/store/cart.store";
@@ -52,6 +54,7 @@ export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal());
   const user = useAuthStore((s) => s.user);
+  const { changes } = useCartPriceSync();
 
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   // null = "enter a new address"; otherwise the chosen saved address id.
@@ -128,6 +131,7 @@ export default function CheckoutPage() {
 
   return (
     <Container className="py-10">
+      <CartChangeNotice changes={changes} />
       <h1 className="text-3xl font-bold tracking-tight text-ink-900 dark:text-neutral-50">Checkout</h1>
       <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
         Step 1 of 2 — where should we deliver?

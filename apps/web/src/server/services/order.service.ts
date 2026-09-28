@@ -5,6 +5,7 @@ import { env } from "@/server/config/env";
 import { ApiError } from "@/server/http/errors";
 import { getPaymentProvider } from "@/server/services/payment";
 import { paymentSettingsService } from "@/server/services/payment/settings.service";
+import { resolvePublicBaseUrl } from "@/server/lib/base-url";
 import { shippingService } from "@/server/services/shipping.service";
 import { logisticsService, type CourierOption } from "@/server/services/logistics";
 import { paginate } from "@/server/lib/pagination";
@@ -65,7 +66,7 @@ async function restoreStock(lineItems: LineItem[], session?: mongoose.ClientSess
 }
 
 export const orderService = {
-  async createOrder(userId: string, input: CreateOrderInput) {
+  async createOrder(userId: string, input: CreateOrderInput, requestOrigin?: string) {
     const user = await User.findById(userId).select("email").lean();
     if (!user) {
       throw new ApiError(404, "User not found");
@@ -256,6 +257,7 @@ export const orderService = {
     // insufficient wallet balance, etc.), unwind the order and restore stock
     // rather than leaving an orphaned PENDING order behind.
     try {
+      const baseUrl = resolvePublicBaseUrl(requestOrigin);
       const provider = getPaymentProvider(input.paymentProvider);
       const result = await provider.initiate({
         orderId: String(order!._id),
@@ -264,7 +266,8 @@ export const orderService = {
         currency: order!.currency,
         email: user.email,
         userId,
-        redirectUrl: `${env.APP_URL}/checkout/confirmation/${order!._id}`,
+        redirectUrl: `${baseUrl}/checkout/confirmation/${order!._id}`,
+        baseUrl,
       });
 
       await Payment.updateOne(
@@ -288,6 +291,12 @@ export const orderService = {
         status: result.status,
       };
     } catch (err) {
+      // Best-effort cleanup. If the unwind itself fails, that must not replace
+      // the error the customer needs to see — previously a failed cleanup threw
+      // its own exception out of this catch block, so a declined payment showed
+      // up as an opaque "Internal server error" and the real reason was lost.
+      // The failure is logged with the order number, since a half-unwound order
+      // (stock held, no payment) is something an operator has to reconcile.
       const unwindSession = await mongoose.startSession();
       try {
         await unwindSession.withTransaction(async () => {
@@ -296,6 +305,11 @@ export const orderService = {
           await OrderItem.deleteMany({ orderId: order!._id }, { session: unwindSession });
           await OrderStatusHistory.deleteMany({ orderId: order!._id }, { session: unwindSession });
           await Payment.deleteMany({ orderId: order!._id }, { session: unwindSession });
+        });
+      } catch (unwindErr) {
+        console.error("[orders] failed to unwind order after payment failure", {
+          orderNumber: order!.orderNumber,
+          error: unwindErr instanceof Error ? unwindErr.message : unwindErr,
         });
       } finally {
         await unwindSession.endSession();

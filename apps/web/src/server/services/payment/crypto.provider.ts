@@ -34,11 +34,11 @@ export const cryptoProvider: PaymentProviderAdapter = {
       // reconciling a payment by hand.
       orderId: params.orderNumber,
       orderDescription: `ZylixStore order ${params.orderNumber}`,
-      ipnCallbackUrl: `${env.APP_URL}/api/v1/webhooks/nowpayments`,
+      ipnCallbackUrl: `${params.baseUrl}/api/v1/webhooks/nowpayments`,
       successUrl: params.redirectUrl,
       // Cancelling drops them back at checkout with the cart intact rather
       // than at a dead end.
-      cancelUrl: `${env.APP_URL}/checkout/payment`,
+      cancelUrl: `${params.baseUrl}/checkout/payment`,
     });
 
     return {

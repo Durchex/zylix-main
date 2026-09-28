@@ -34,23 +34,66 @@ async function rawRequest(path: string, options: RequestOptions, accessToken: st
   });
 }
 
+type RefreshOutcome = "refreshed" | "expired" | "unavailable";
+
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
+
+/**
+ * Exchanges the refresh cookie for a new session — at most once at a time.
+ *
+ * The server rotates the refresh token on every use, so two overlapping
+ * refreshes both present the same cookie and the second one arrives after the
+ * first has already revoked it. That second call gets a 401, which used to be
+ * read as "you're logged out". Concurrent callers (the session bootstrap, a
+ * request that just 401'd, a second tab's fetch) now share one request and all
+ * see its result.
+ *
+ * The outcome distinguishes a definitive answer from a transient one. Only
+ * "expired" — the server explicitly said the session is invalid — should log
+ * anyone out. A 500 or a dropped connection says nothing about whether the
+ * session is still good, so it must not clear it.
+ */
+export function refreshSession(): Promise<RefreshOutcome> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async (): Promise<RefreshOutcome> => {
+    try {
+      const res = await rawRequest("/auth/refresh", { method: "POST" }, null);
+      if (res.ok) {
+        const data = await res.json();
+        useAuthStore.getState().setSession(data.user, data.accessToken);
+        return "refreshed";
+      }
+      return res.status === 401 ? "expired" : "unavailable";
+    } catch {
+      return "unavailable";
+    } finally {
+      // Cleared on the next tick so callers awaiting this same promise all
+      // resolve from it, while a later, genuinely new refresh starts fresh.
+      setTimeout(() => {
+        refreshInFlight = null;
+      }, 0);
+    }
+  })();
+
+  return refreshInFlight;
+}
+
 /**
  * Shared fetch wrapper: attaches the in-memory access token, and on a 401
  * transparently tries the refresh endpoint once (the refresh token lives in
  * an httpOnly cookie the browser sends automatically) before retrying.
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { accessToken, setSession, clearSession } = useAuthStore.getState();
+  const { accessToken, clearSession } = useAuthStore.getState();
 
   let res = await rawRequest(path, options, accessToken);
 
   if (res.status === 401 && !options.skipAuthRetry) {
-    const refreshed = await rawRequest("/auth/refresh", { method: "POST" }, null);
-    if (refreshed.ok) {
-      const data = await refreshed.json();
-      setSession(data.user, data.accessToken);
-      res = await rawRequest(path, options, data.accessToken);
-    } else {
+    const outcome = await refreshSession();
+    if (outcome === "refreshed") {
+      res = await rawRequest(path, options, useAuthStore.getState().accessToken);
+    } else if (outcome === "expired") {
       clearSession();
     }
   }
@@ -92,17 +135,15 @@ async function rawUpload(path: string, file: File, accessToken: string | null) {
  * File/Blob payloads).
  */
 export async function uploadFile(path: string, file: File): Promise<{ url: string }> {
-  const { accessToken, setSession, clearSession } = useAuthStore.getState();
+  const { accessToken, clearSession } = useAuthStore.getState();
 
   let res = await rawUpload(path, file, accessToken);
 
   if (res.status === 401) {
-    const refreshed = await rawRequest("/auth/refresh", { method: "POST" }, null);
-    if (refreshed.ok) {
-      const data = await refreshed.json();
-      setSession(data.user, data.accessToken);
-      res = await rawUpload(path, file, data.accessToken);
-    } else {
+    const outcome = await refreshSession();
+    if (outcome === "refreshed") {
+      res = await rawUpload(path, file, useAuthStore.getState().accessToken);
+    } else if (outcome === "expired") {
       clearSession();
     }
   }

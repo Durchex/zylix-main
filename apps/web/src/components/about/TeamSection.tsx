@@ -1,23 +1,13 @@
 import { Avatar } from "@/components/ui/Avatar";
 
-// Placeholder leadership copy pending real headshots/bios — swap before
-// this section is treated as representing real, named individuals.
+// Names and titles only. Bios are left out deliberately: the previous ones
+// were placeholder copy making specific claims (years of experience, areas of
+// responsibility) about people who were never real, and writing new ones for
+// real individuals should come from them, not from guesswork.
 const TEAM = [
-  {
-    name: "Ada Bello",
-    role: "Founder & CEO",
-    bio: "15+ years in African e-commerce and consumer electronics retail.",
-  },
-  {
-    name: "Tunde Okafor",
-    role: "Head of Operations",
-    bio: "Oversees logistics and fulfillment nationwide.",
-  },
-  {
-    name: "Ngozi Eze",
-    role: "Head of Engineering",
-    bio: "Leads the team building the storefront, payments, and catalog systems.",
-  },
+  { name: "Chukwu Victor", role: "Founder & CEO" },
+  { name: "Mercy Ekpere", role: "Head of Operations" },
+  { name: "Alex Okoji", role: "Head of Engineering" },
 ];
 
 export function TeamSection() {
@@ -35,7 +25,6 @@ export function TeamSection() {
             <p className="text-xs font-medium uppercase tracking-wide text-brand-600 dark:text-accent-400">
               {member.role}
             </p>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{member.bio}</p>
           </div>
         ))}
       </div>

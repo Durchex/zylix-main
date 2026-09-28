@@ -21,6 +21,8 @@ import type { RegisterInput, LoginInput } from "@/server/validation/auth.schema"
 
 const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1h
+// How long after rotation a revoked refresh token is still honoured once more.
+const REFRESH_REUSE_WINDOW_MS = 15 * 1000;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30d, mirrors JWT_REFRESH_EXPIRES_IN default
 
 type SessionMeta = { userAgent?: string; ipAddress?: string };
@@ -170,11 +172,26 @@ export const authService = {
     const stored = await RefreshToken.findById(payload.tokenId).lean();
     if (
       !stored ||
-      stored.revokedAt ||
       stored.expiresAt < new Date() ||
       stored.tokenHash !== hashToken(rawRefreshToken)
     ) {
       throw new ApiError(401, "Session expired, please log in again");
+    }
+
+    // A token that was revoked a moment ago is not necessarily stolen.
+    //
+    // Rotation revokes the presented token on use, so two refreshes fired
+    // together — two tabs, or a page load overlapping a request that just
+    // 401'd — both carry the same cookie, and whichever the server handles
+    // second finds it already revoked. Rejecting that logs out a user who did
+    // nothing wrong. A short reuse window accepts the near-simultaneous
+    // duplicate while still refusing a token replayed later, which is what
+    // rotation is actually there to catch.
+    if (stored.revokedAt) {
+      const revokedForMs = Date.now() - stored.revokedAt.getTime();
+      if (revokedForMs > REFRESH_REUSE_WINDOW_MS) {
+        throw new ApiError(401, "Session expired, please log in again");
+      }
     }
 
     const user = await User.findById(stored.userId).lean<UserDoc>();
@@ -183,7 +200,12 @@ export const authService = {
     }
 
     // Rotate: revoke the presented token and issue a fresh pair.
-    await RefreshToken.updateOne({ _id: stored._id }, { revokedAt: new Date() });
+    // Only the first use stamps revokedAt — a duplicate inside the reuse window
+    // must not push the window forward and extend the token's life.
+    await RefreshToken.updateOne(
+      { _id: stored._id, revokedAt: null },
+      { revokedAt: new Date() },
+    );
 
     const { accessToken, refreshToken } = await issueSession(user, meta);
 

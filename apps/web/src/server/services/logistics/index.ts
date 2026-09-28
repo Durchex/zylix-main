@@ -94,7 +94,7 @@ async function buildPackage(items: RateRequestItem[], settings: StoreSettingDoc)
 
   const variantIds = items
     .map((i) => i.variantId)
-    .filter((id): id is string => Boolean(id) && Types.ObjectId.isValid(id));
+    .filter((id): id is string => typeof id === "string" && Types.ObjectId.isValid(id));
   const variants = await ProductVariant.find({ _id: { $in: variantIds } }).lean();
   const variantById = new Map(variants.map((v) => [String(v._id), v]));
 
@@ -124,6 +124,34 @@ async function buildPackage(items: RateRequestItem[], settings: StoreSettingDoc)
   }
 
   return { packageItems, packageDimension: { length, width, height } };
+}
+
+/**
+ * What these items cost right now, from the database — never from the client.
+ *
+ * Shipping can depend on the order value (free-shipping thresholds), so the
+ * fee shown at checkout has to be computed against the same subtotal the order
+ * will actually be charged on. Quoting against anything else means the price
+ * moves between the payment step and the charge.
+ */
+export async function computeItemsSubtotal(items: RateRequestItem[]): Promise<number> {
+  const productIds = items.map((i) => i.productId).filter((id) => Types.ObjectId.isValid(id));
+  const variantIds = items
+    .map((i) => i.variantId)
+    .filter((id): id is string => typeof id === "string" && Types.ObjectId.isValid(id));
+
+  const [products, variants] = await Promise.all([
+    Product.find({ _id: { $in: productIds } }).select("_id basePrice").lean(),
+    ProductVariant.find({ _id: { $in: variantIds } }).select("_id price").lean(),
+  ]);
+  const productById = new Map(products.map((p) => [String(p._id), p]));
+  const variantById = new Map(variants.map((v) => [String(v._id), v]));
+
+  return items.reduce((sum, item) => {
+    const variant = item.variantId ? variantById.get(item.variantId) : undefined;
+    const unit = variant?.price ?? productById.get(item.productId)?.basePrice ?? 0;
+    return sum + unit * item.quantity;
+  }, 0);
 }
 
 export const logisticsService = {

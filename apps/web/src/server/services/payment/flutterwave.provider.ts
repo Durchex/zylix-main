@@ -28,54 +28,83 @@ function requireSecretKey(): string {
   return env.FLUTTERWAVE_SECRET_KEY;
 }
 
+/**
+ * Every call to Flutterwave goes through here.
+ *
+ * Two things were missing before, and both surfaced as a bare "Internal server
+ * error" at checkout: no timeout, so a slow upstream held the request until the
+ * platform killed it; and an unguarded `res.json()`, so any non-JSON reply
+ * (a gateway error page, an HTML 502) or a dropped connection threw a raw
+ * exception instead of a handled error. Both now become an ApiError with a
+ * message the customer can act on.
+ */
+async function flutterwaveRequest<T>(path: string, init: RequestInit = {}): Promise<{ ok: boolean; body: T | null }> {
+  try {
+    const res = await fetch(`${FLUTTERWAVE_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${requireSecretKey()}`,
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+    const body = (await res.json().catch(() => null)) as T | null;
+    return { ok: res.ok, body };
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("[flutterwave] request failed", {
+      path,
+      error: err instanceof Error ? err.message : err,
+    });
+    throw new ApiError(502, "Could not reach the payment provider. Please try again in a moment.");
+  }
+}
+
 export const flutterwaveProvider: PaymentProviderAdapter = {
   async initiate(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
-    const secretKey = requireSecretKey();
     const txRef = `ZLX-FLW-${crypto.randomBytes(6).toString("hex")}`;
 
-    const res = await fetch(`${FLUTTERWAVE_BASE_URL}/payments`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        "Content-Type": "application/json",
+    const { ok, body } = await flutterwaveRequest<FlutterwaveInitiateResponse & { message?: string }>(
+      "/payments",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          tx_ref: txRef,
+          amount: params.amount,
+          currency: params.currency,
+          redirect_url: params.redirectUrl,
+          customer: { email: params.email },
+          customizations: { title: "ZylixStore", description: `Order ${params.orderNumber}` },
+        }),
       },
-      body: JSON.stringify({
-        tx_ref: txRef,
-        amount: params.amount,
-        currency: params.currency,
-        redirect_url: params.redirectUrl,
-        customer: { email: params.email },
-        customizations: { title: "ZylixStore", description: `Order ${params.orderNumber}` },
-      }),
-    });
+    );
 
-    const data = (await res.json()) as FlutterwaveInitiateResponse;
-    if (!res.ok || data.status !== "success" || !data.data) {
-      throw new ApiError(502, "Failed to initiate Flutterwave payment", data);
+    if (!ok || body?.status !== "success" || !body.data) {
+      // Provider detail goes to the log, not the response — it can echo back
+      // request fields and isn't something to hand to a browser.
+      console.error("[flutterwave] initiate rejected", { txRef, message: body?.message, status: body?.status });
+      throw new ApiError(502, "The payment provider could not start this payment. Please try again or pick another method.");
     }
 
-    return { providerRef: txRef, status: "PENDING", checkoutUrl: data.data.link };
+    return { providerRef: txRef, status: "PENDING", checkoutUrl: body.data.link };
   },
 
   async verify(providerRef: string): Promise<VerifyPaymentResult> {
-    const secretKey = requireSecretKey();
-
-    const res = await fetch(
-      `${FLUTTERWAVE_BASE_URL}/transactions/verify_by_reference?tx_ref=${encodeURIComponent(providerRef)}`,
-      { headers: { Authorization: `Bearer ${secretKey}` } },
+    const { ok, body } = await flutterwaveRequest<FlutterwaveVerifyResponse>(
+      `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(providerRef)}`,
     );
 
-    const data = (await res.json()) as FlutterwaveVerifyResponse;
-    if (!res.ok || data.status !== "success" || !data.data) {
-      return { success: false, providerRef, amount: 0, currency: "", raw: data };
+    if (!ok || body?.status !== "success" || !body.data) {
+      return { success: false, providerRef, amount: 0, currency: "", raw: body };
     }
 
     return {
-      success: data.data.status === "successful",
+      success: body.data.status === "successful",
       providerRef,
-      amount: data.data.amount,
-      currency: data.data.currency,
-      raw: data,
+      amount: body.data.amount,
+      currency: body.data.currency,
+      raw: body,
     };
   },
 };
