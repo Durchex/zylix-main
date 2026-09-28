@@ -79,6 +79,37 @@ describe("apiRequest", () => {
     expect(useAuthStore.getState().user).toBeNull();
   });
 
+  it("keeps the session when the refresh endpoint is merely unavailable", async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce(jsonResponse(401, { error: { message: "Invalid or expired session" } }))
+      .mockResolvedValueOnce(jsonResponse(503, { error: { message: "Try again" } }));
+
+    useAuthStore.getState().setSession(sampleUser, "stale-token");
+
+    await expect(apiRequest("/auth/me")).rejects.toBeInstanceOf(ApiRequestError);
+    expect(useAuthStore.getState().user).not.toBeNull();
+  });
+
+  it("shares one refresh between simultaneous 401s", async () => {
+    (global.fetch as jest.Mock).mockImplementation(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/auth/refresh")) {
+        return jsonResponse(200, { user: sampleUser, accessToken: "new-token" });
+      }
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization;
+      return auth === "Bearer new-token"
+        ? jsonResponse(200, { ok: true })
+        : jsonResponse(401, { error: { message: "Invalid or expired session" } });
+    });
+
+    useAuthStore.getState().setSession(sampleUser, "stale-token");
+    await Promise.all([apiRequest("/a"), apiRequest("/b"), apiRequest("/c")]);
+
+    const refreshCalls = (global.fetch as jest.Mock).mock.calls.filter(([u]) =>
+      String(u).includes("/auth/refresh"),
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+
   it("does not attempt a refresh when skipAuthRetry is set", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(401, { error: { message: "Session expired" } }),

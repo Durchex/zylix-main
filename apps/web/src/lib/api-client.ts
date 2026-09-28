@@ -68,11 +68,12 @@ export function refreshSession(): Promise<RefreshOutcome> {
     } catch {
       return "unavailable";
     } finally {
-      // Cleared on the next tick so callers awaiting this same promise all
-      // resolve from it, while a later, genuinely new refresh starts fresh.
-      setTimeout(() => {
-        refreshInFlight = null;
-      }, 0);
+      // Cleared the moment it settles. Callers already awaiting this promise
+      // still get its result — they hold a reference — while anyone arriving
+      // afterwards starts a genuinely new refresh instead of being handed an
+      // old answer. (Deferring this to a timer let a caller landing just after
+      // completion inherit a stale result.)
+      refreshInFlight = null;
     }
   })();
 
